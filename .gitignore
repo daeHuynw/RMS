@@ -1,0 +1,20 @@
+.env
+.env.*
+!.env.example
+
+# anh mon an
+uploads/
+
+#san pham build: maven, node lib, vite
+**/target/
+**/node_modules/
+**/dist/
+
+#file cua ide va he dieu hanh
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+
+
