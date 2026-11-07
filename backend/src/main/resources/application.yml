@@ -4,3 +4,22 @@ server:
 spring:
   application:
     name: rms-backend
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+  datasource:
+    url: jdbc:mysql://${RMS_MYSQL_HOST:127.0.0.1}:${RMS_MYSQL_PORT:3306}/${RMS_MYSQL_DATABASE:rms_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${RMS_MYSQL_USER:rms_learn}
+    password: ${RMS_MYSQL_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
