@@ -36,6 +36,10 @@ public class ApiException extends RuntimeException {
     public static ApiException forbidden(String message) {
         return new ApiException(HttpStatus.FORBIDDEN, "FORBIDDEN", message);
     }
+
+    public static ApiException unauthorized(String message) {
+    return new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", message);
+}
 }
 
 //Khi một quy tắc nghiệp vụ thất bại, service ném một exception. 

@@ -1,5 +1,7 @@
 package com.rms.modules.auth.controller;
 
+import com.rms.modules.auth.dto.AuthResponse;
+import com.rms.modules.auth.dto.LoginRequest;
 import com.rms.modules.auth.dto.RegisterRequest;
 import com.rms.modules.auth.dto.UserResponse;
 import com.rms.modules.auth.service.AuthService;
@@ -26,4 +28,9 @@ public class AuthController {
     public UserResponse register(@Valid @RequestBody RegisterRequest request) {
         return auth.register(request);
     }
+
+    @PostMapping("/login")
+    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
+        return auth.login(request);
+}
 }

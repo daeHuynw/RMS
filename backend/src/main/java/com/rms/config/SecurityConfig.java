@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/health").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/auth/register").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(
                         (request, response, failure) -> writeUnauthorized(objectMapper, request, response)))
