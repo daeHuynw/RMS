@@ -8,6 +8,7 @@ import com.rms.modules.auth.dto.UserResponse;
 import com.rms.modules.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,6 +40,12 @@ public class AuthController {
     @PostMapping("/refresh")
     public AuthResponse refresh(@Valid @RequestBody RefreshRequest request) {
         return auth.refresh(request.refreshToken());
+    }
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(@Valid @RequestBody RefreshRequest request, Authentication authentication) {
+        auth.logout(request.refreshToken(), (Long) authentication.getPrincipal());
     }
 
 @GetMapping("/me")

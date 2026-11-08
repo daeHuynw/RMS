@@ -100,6 +100,15 @@ public class AuthService {
         return issue(current.getUser());
     }
 
+    @Transactional
+    public void logout(String rawToken, Long userId) {
+        RefreshToken token = refreshTokens.findByTokenHash(hash(rawToken)).orElse(null);
+        if (token == null || !token.getUser().getId().equals(userId)) {
+            return;
+        }
+        token.revoke();
+    }
+
     private AuthResponse issue(User user) {
         List<String> roleNames = user.getRoles().stream().map(Role::getName).toList();
         UserResponse body = new UserResponse(
