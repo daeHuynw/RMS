@@ -5,6 +5,11 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.nimbusds.jose.proc.JWSVerificationKeySelector;
+import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.rms.config.SecurityProperties;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -52,19 +57,17 @@ public class JwtService {
     }
 
     public Long parseUserId(String token) {
-        try {
-            var processor = new com.nimbusds.jwt.proc.DefaultJWTProcessor<com.nimbusds.jose.proc.SecurityContext>();
-            processor.setJWSKeySelector(new com.nimbusds.jose.proc.JWSVerificationKeySelector<>(
-                    com.nimbusds.jose.JWSAlgorithm.HS256,
-                    new com.nimbusds.jose.jwk.source.ImmutableSecret<>(secret)));
-            var claims = processor.process(token, null);
-            if (claims.getSubject() == null || claims.getExpirationTime() == null
-                    || !claims.getExpirationTime().toInstant().isAfter(Instant.now())) {
-                throw new IllegalArgumentException("expired");
-            }
-            return Long.valueOf(claims.getSubject());
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("invalid token");
+    try {
+        var processor = new DefaultJWTProcessor<SecurityContext>();
+        processor.setJWSKeySelector(new JWSVerificationKeySelector<>(JWSAlgorithm.HS256, new ImmutableSecret<>(secret)));
+        JWTClaimsSet claims = processor.process(token, null);
+        if (claims.getSubject() == null || claims.getExpirationTime() == null || !claims.getExpirationTime().toInstant().isAfter(Instant.now())) {
+            throw new IllegalArgumentException("expired");
         }
+        return Long.valueOf(claims.getSubject());
+    } catch (Exception ex) {
+        throw new IllegalArgumentException("invalid token");
     }
+}
+    
 }
