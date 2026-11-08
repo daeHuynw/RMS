@@ -128,10 +128,16 @@ button {
 
 .menu-item {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   padding: 12px 0;
   border-top: 1px solid #e2e8f0;
+}
+
+.menu-item-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .menu-item h2 {
@@ -139,8 +145,22 @@ button {
   font-size: 1.05rem;
 }
 
+.menu-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  background: #f1f5f9;
+}
+
+.menu-thumb-empty {
+  display: inline-block;
+}
+
 .price {
   margin: 0;
   font-weight: 700;
-  white-space:nowrap;
+  white-space: nowrap;
 }

@@ -68,8 +68,12 @@ function renderList() {
   for (const item of items) {
     const row = document.createElement('article')
     row.className = 'menu-item'
+    const img = item.imageUrl
+      ? `<img class="menu-thumb" src="${escapeHtml(item.imageUrl)}" alt="" />`
+      : `<span class="menu-thumb menu-thumb-empty"></span>`
     row.innerHTML = `
-      <div>
+      ${img}
+      <div class="menu-item-body">
         <h2>${escapeHtml(item.name)}</h2>
         <p class="muted">${escapeHtml(item.categoryName || '')}</p>
         <p class="muted">${escapeHtml(item.description || '')}</p>

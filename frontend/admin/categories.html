@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin · Danh mục — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/styles/admin.css" />
+  </head>
+  <body>
+    <main class="page admin-page">
+      <section class="card admin-shell">
+        <header class="admin-header">
+          <div>
+            <h1>Danh mục</h1>
+            <p class="muted">Quản lý category món ăn</p>
+          </div>
+          <nav class="admin-nav">
+            <a href="/admin/menu.html">Món</a>
+            <a href="/menu.html">Xem thực đơn</a>
+            <a href="/">Trang chủ</a>
+          </nav>
+        </header>
+
+        <p id="error" class="error" hidden></p>
+        <p id="ok" class="ok" hidden></p>
+
+        <div class="admin-grid admin-grid-2">
+          <div class="admin-panel">
+            <h2 id="form-title">Thêm danh mục</h2>
+            <form id="category-form">
+              <input type="hidden" id="categoryId" />
+              <label for="name">Tên</label>
+              <input id="name" name="name" required maxlength="120" />
+              <label for="description">Mô tả</label>
+              <textarea id="description" name="description" maxlength="500"></textarea>
+              <div class="admin-actions" style="margin-top: 16px">
+                <button type="submit" id="save-btn">Lưu</button>
+                <button type="button" id="reset-btn" class="btn-secondary">Hủy sửa</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="admin-panel">
+            <h2>Danh sách</h2>
+            <p id="loading" class="muted">Đang tải…</p>
+            <table class="admin-table" id="category-table" hidden>
+              <thead>
+                <tr>
+                  <th>Tên</th>
+                  <th>Mô tả</th>
+                  <th>TT</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="category-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/admin/categories.js"></script>
+  </body>
+</html>

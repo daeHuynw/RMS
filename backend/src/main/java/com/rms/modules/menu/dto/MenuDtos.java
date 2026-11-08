@@ -16,7 +16,8 @@ public final class MenuDtos {
     public record CategoryResponse(
             Long id,
             String name,
-            String description) {
+            String description,
+            boolean active) {
     }
 
     public record MenuItemResponse(
