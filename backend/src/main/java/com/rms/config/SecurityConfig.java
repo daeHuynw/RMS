@@ -30,7 +30,18 @@ public class SecurityConfig {
     //SecurityFilterChain la mot chuoi cac bo loc (filter) duoc su dung de xu ly cac yeu cau HTTP den ung dung.
     // su dung de cau hinh cac quy tac bao mat cho cac yeu cau HTTP, nhu xac thuc nguoi dung, uan ly phien lam viec, va kiem soat truy cap vao cac tai nguyen.
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, ObjectMapper objectMapper) throws Exception {
+    public org.springframework.boot.web.servlet.FilterRegistrationBean<com.rms.security.JwtAuthenticationFilter> jwtFilterRegistration(
+            com.rms.security.JwtAuthenticationFilter filter) {
+        var registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            ObjectMapper objectMapper,
+            com.rms.security.JwtAuthenticationFilter jwtFilter) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -39,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/auth/register").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .anyRequest().authenticated())
+                .addFilterBefore(jwtFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(
                         (request, response, failure) -> writeUnauthorized(objectMapper, request, response)))
                 .build();

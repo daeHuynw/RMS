@@ -50,4 +50,21 @@ public class JwtService {
     public long expiresInSeconds() {
         return properties.accessTokenMinutes() * 60L;
     }
+
+    public Long parseUserId(String token) {
+        try {
+            var processor = new com.nimbusds.jwt.proc.DefaultJWTProcessor<com.nimbusds.jose.proc.SecurityContext>();
+            processor.setJWSKeySelector(new com.nimbusds.jose.proc.JWSVerificationKeySelector<>(
+                    com.nimbusds.jose.JWSAlgorithm.HS256,
+                    new com.nimbusds.jose.jwk.source.ImmutableSecret<>(secret)));
+            var claims = processor.process(token, null);
+            if (claims.getSubject() == null || claims.getExpirationTime() == null
+                    || !claims.getExpirationTime().toInstant().isAfter(Instant.now())) {
+                throw new IllegalArgumentException("expired");
+            }
+            return Long.valueOf(claims.getSubject());
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("invalid token");
+        }
+    }
 }

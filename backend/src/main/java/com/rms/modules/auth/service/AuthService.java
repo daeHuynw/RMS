@@ -76,4 +76,14 @@ public AuthResponse login(LoginRequest request) {
     UserResponse body = new UserResponse(user.getId(), user.getFullName(), user.getEmail(), user.getPhone(), user.isActive(), roleNames);
     return new AuthResponse(jwt.createAccessToken(user.getId(), user.getEmail(), roleNames), jwt.expiresInSeconds(), body);
 }
+
+
+  @Transactional(readOnly = true)
+public UserResponse me(Long userId) {
+    User user = users.findWithRolesById(userId).filter(User::isActive)
+            .orElseThrow(() -> ApiException.unauthorized("Authentication required"));
+    List<String> roleNames = user.getRoles().stream().map(Role::getName).toList();
+    return new UserResponse(user.getId(), user.getFullName(), user.getEmail(), user.getPhone(), user.isActive(), roleNames);
+}
+
 }

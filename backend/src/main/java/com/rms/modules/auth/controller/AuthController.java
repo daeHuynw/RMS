@@ -7,6 +7,7 @@ import com.rms.modules.auth.dto.UserResponse;
 import com.rms.modules.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,5 +33,10 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return auth.login(request);
+}
+
+@GetMapping("/me")
+public UserResponse me(org.springframework.security.core.Authentication authentication) {
+    return auth.me((Long) authentication.getPrincipal());
 }
 }
