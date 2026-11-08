@@ -4,9 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <main class="page">
+      <form id="login-form" class="card">
+        <h1>Đăng nhập</h1>
+        <p class="muted">Restaurant Management System</p>
+        <p id="error" class="error" hidden></p>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" value="an@example.com" required />
+        <label for="password">Mật khẩu</label>
+        <input id="password" name="password" type="password" required />
+        <button type="submit">Đăng nhập</button>
+      </form>
+
+      <section id="profile" class="card" hidden>
+        <h1 id="greeting"></h1>
+        <p id="profile-email" class="muted"></p>
+        <p id="profile-roles" class="muted"></p>
+        <button id="logout" type="button">Đăng xuất</button>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>
