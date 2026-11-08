@@ -1,4 +1,4 @@
 package com.rms.modules.auth.dto;
 
-public record AuthResponse(String accessToken, long expiresIn, UserResponse user) {
+public record AuthResponse(String accessToken, String refreshToken, long expiresIn, UserResponse user) {
 }

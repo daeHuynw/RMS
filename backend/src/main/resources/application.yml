@@ -27,3 +27,4 @@ rms:
   security:
     jwt-secret: ${RMS_JWT_SECRET:}
     access-token-minutes: 30
+    refresh-token-days: 30

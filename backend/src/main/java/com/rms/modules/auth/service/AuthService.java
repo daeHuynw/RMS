@@ -1,10 +1,13 @@
 package com.rms.modules.auth.service;
 
+import com.rms.config.SecurityProperties;
 import com.rms.exception.ApiException;
 import com.rms.modules.auth.dto.AuthResponse;
 import com.rms.modules.auth.dto.LoginRequest;
 import com.rms.modules.auth.dto.RegisterRequest;
 import com.rms.modules.auth.dto.UserResponse;
+import com.rms.modules.auth.entity.RefreshToken;
+import com.rms.modules.auth.repository.RefreshTokenRepository;
 import com.rms.modules.role.entity.Role;
 import com.rms.modules.role.repository.RoleRepository;
 import com.rms.modules.user.entity.User;
@@ -12,6 +15,12 @@ import com.rms.modules.user.repository.UserRepository;
 import com.rms.security.JwtService;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.util.Base64;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -29,12 +38,18 @@ public class AuthService {
     private final UserRepository users;
     private final RoleRepository roles;
     private final PasswordEncoder passwords;
+    private final RefreshTokenRepository refreshTokens;
+    private final SecurityProperties security;
+    private final SecureRandom random = new SecureRandom();
 
-    public AuthService(UserRepository users, RoleRepository roles, PasswordEncoder passwords, JwtService jwt) {
+    public AuthService(UserRepository users, RoleRepository roles, PasswordEncoder passwords, JwtService jwt,
+                       RefreshTokenRepository refreshTokens, SecurityProperties security) {
         this.users = users;
         this.roles = roles;
         this.passwords = passwords;
         this.jwt = jwt;
+        this.refreshTokens = refreshTokens;
+        this.security = security;
     }
 
     @Transactional
@@ -65,17 +80,51 @@ public class AuthService {
                 user.getRoles().stream().map(Role::getName).toList());
     }
 
-    @Transactional(readOnly = true)
-public AuthResponse login(LoginRequest request) {
-    String email = request.email().trim().toLowerCase(Locale.ROOT);
-    User user = users.findByEmail(email).orElse(null);
-    if (user == null || !user.isActive() || !passwords.matches(request.password(), user.getPasswordHash())) {
-        throw ApiException.unauthorized("Invalid credentials");
+    @Transactional
+    public AuthResponse login(LoginRequest request) {
+        String email = request.email().trim().toLowerCase(Locale.ROOT);
+        User user = users.findByEmail(email).orElse(null);
+        if (user == null || !user.isActive() || !passwords.matches(request.password(), user.getPasswordHash())) {
+            throw ApiException.unauthorized("Invalid credentials");
+        }
+        return issue(user);
     }
-    List<String> roleNames = user.getRoles().stream().map(Role::getName).toList();
-    UserResponse body = new UserResponse(user.getId(), user.getFullName(), user.getEmail(), user.getPhone(), user.isActive(), roleNames);
-    return new AuthResponse(jwt.createAccessToken(user.getId(), user.getEmail(), roleNames), jwt.expiresInSeconds(), body);
-}
+
+    @Transactional
+    public AuthResponse refresh(String rawToken) {
+        RefreshToken current = refreshTokens.findByTokenHash(hash(rawToken)).orElse(null);
+        if (current == null || !current.isUsable(Instant.now()) || !current.getUser().isActive()) {
+            throw ApiException.unauthorized("Invalid refresh token");
+        }
+        current.revoke();
+        return issue(current.getUser());
+    }
+
+    private AuthResponse issue(User user) {
+        List<String> roleNames = user.getRoles().stream().map(Role::getName).toList();
+        UserResponse body = new UserResponse(
+                user.getId(), user.getFullName(), user.getEmail(), user.getPhone(), user.isActive(), roleNames);
+        byte[] bytes = new byte[32];
+        random.nextBytes(bytes);
+        String refreshToken = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        refreshTokens.save(new RefreshToken(
+                user,
+                hash(refreshToken),
+                Instant.now().plusSeconds(security.refreshTokenDays() * 24L * 60L * 60L)));
+        return new AuthResponse(
+                jwt.createAccessToken(user.getId(), user.getEmail(), roleNames),
+                refreshToken,
+                jwt.expiresInSeconds(),
+                body);
+    }
+
+    private static String hash(String raw) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(raw.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
 
 
   @Transactional(readOnly = true)

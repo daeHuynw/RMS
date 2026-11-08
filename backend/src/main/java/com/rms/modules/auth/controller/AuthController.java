@@ -2,6 +2,7 @@ package com.rms.modules.auth.controller;
 
 import com.rms.modules.auth.dto.AuthResponse;
 import com.rms.modules.auth.dto.LoginRequest;
+import com.rms.modules.auth.dto.RefreshRequest;
 import com.rms.modules.auth.dto.RegisterRequest;
 import com.rms.modules.auth.dto.UserResponse;
 import com.rms.modules.auth.service.AuthService;
@@ -33,7 +34,12 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return auth.login(request);
-}
+    }
+
+    @PostMapping("/refresh")
+    public AuthResponse refresh(@Valid @RequestBody RefreshRequest request) {
+        return auth.refresh(request.refreshToken());
+    }
 
 @GetMapping("/me")
 public UserResponse me(org.springframework.security.core.Authentication authentication) {
