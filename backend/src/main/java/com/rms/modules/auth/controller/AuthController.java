@@ -1,9 +1,11 @@
 package com.rms.modules.auth.controller;
 
 import com.rms.modules.auth.dto.AuthResponse;
+import com.rms.modules.auth.dto.ChangePasswordRequest;
 import com.rms.modules.auth.dto.LoginRequest;
 import com.rms.modules.auth.dto.RefreshRequest;
 import com.rms.modules.auth.dto.RegisterRequest;
+import com.rms.modules.auth.dto.UpdateProfileRequest;
 import com.rms.modules.auth.dto.UserResponse;
 import com.rms.modules.auth.service.AuthService;
 import jakarta.validation.Valid;
@@ -11,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -48,8 +51,23 @@ public class AuthController {
         auth.logout(request.refreshToken(), (Long) authentication.getPrincipal());
     }
 
-@GetMapping("/me")
-public UserResponse me(org.springframework.security.core.Authentication authentication) {
-    return auth.me((Long) authentication.getPrincipal());
-}
+    @GetMapping("/me")
+    public UserResponse me(Authentication authentication) {
+        return auth.me((Long) authentication.getPrincipal());
+    }
+
+    @PutMapping("/me")
+    public UserResponse updateMe(
+            @Valid @RequestBody UpdateProfileRequest request,
+            Authentication authentication) {
+        return auth.updateProfile((Long) authentication.getPrincipal(), request);
+    }
+
+    @PutMapping("/me/password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            Authentication authentication) {
+        auth.changePassword((Long) authentication.getPrincipal(), request);
+    }
 }

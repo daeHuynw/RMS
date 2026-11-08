@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng ký — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <form id="register-form" class="card">
+        <h1>Đăng ký</h1>
+        <p class="muted">Tạo tài khoản khách</p>
+        <p id="error" class="error" hidden></p>
+        <label for="fullName">Họ tên</label>
+        <input id="fullName" name="fullName" required maxlength="150" />
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required maxlength="190" />
+        <label for="phone">Số điện thoại</label>
+        <input id="phone" name="phone" maxlength="20" />
+        <label for="password">Mật khẩu</label>
+        <input id="password" name="password" type="password" required minlength="8" />
+        <button type="submit">Tạo tài khoản</button>
+        <p class="muted" style="margin-top:16px">
+          Đã có tài khoản? <a href="/">Đăng nhập</a>
+        </p>
+      </form>
+    </main>
+    <script type="module" src="/src/pages/auth/register.js"></script>
+  </body>
+</html>

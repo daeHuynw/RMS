@@ -3,8 +3,10 @@ package com.rms.modules.auth.service;
 import com.rms.config.SecurityProperties;
 import com.rms.exception.ApiException;
 import com.rms.modules.auth.dto.AuthResponse;
+import com.rms.modules.auth.dto.ChangePasswordRequest;
 import com.rms.modules.auth.dto.LoginRequest;
 import com.rms.modules.auth.dto.RegisterRequest;
+import com.rms.modules.auth.dto.UpdateProfileRequest;
 import com.rms.modules.auth.dto.UserResponse;
 import com.rms.modules.auth.entity.RefreshToken;
 import com.rms.modules.auth.repository.RefreshTokenRepository;
@@ -136,12 +138,47 @@ public class AuthService {
     }
 
 
-  @Transactional(readOnly = true)
-public UserResponse me(Long userId) {
-    User user = users.findWithRolesById(userId).filter(User::isActive)
-            .orElseThrow(() -> ApiException.unauthorized("Authentication required"));
-    List<String> roleNames = user.getRoles().stream().map(Role::getName).toList();
-    return new UserResponse(user.getId(), user.getFullName(), user.getEmail(), user.getPhone(), user.isActive(), roleNames);
-}
+    @Transactional(readOnly = true)
+    public UserResponse me(Long userId) {
+        User user = users.findWithRolesById(userId).filter(User::isActive)
+                .orElseThrow(() -> ApiException.unauthorized("Authentication required"));
+        List<String> roleNames = user.getRoles().stream().map(Role::getName).toList();
+        return new UserResponse(
+                user.getId(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getPhone(),
+                user.isActive(),
+                roleNames);
+    }
 
+    @Transactional
+    public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
+        User user = users.findWithRolesById(userId).filter(User::isActive)
+                .orElseThrow(() -> ApiException.unauthorized("Authentication required"));
+        user.updateProfile(request.fullName().trim(), blankToNull(request.phone()));
+        return me(userId);
+    }
+
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = users.findWithRolesById(userId).filter(User::isActive)
+                .orElseThrow(() -> ApiException.unauthorized("Authentication required"));
+        if (!passwords.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw ApiException.badRequest("INVALID_PASSWORD", "Current password is incorrect");
+        }
+        int n = request.newPassword().getBytes(StandardCharsets.UTF_8).length;
+        if (n < 8 || n > 72) {
+            throw ApiException.badRequest("VALIDATION_ERROR", "Password must be 8–72 UTF-8 bytes");
+        }
+        user.changePassword(passwords.encode(request.newPassword()));
+    }
+
+    private static String blankToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
 }

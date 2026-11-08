@@ -17,12 +17,17 @@
         <label for="password">Mật khẩu</label>
         <input id="password" name="password" type="password" required />
         <button type="submit">Đăng nhập</button>
+        <p class="muted" style="margin-top:16px">
+  Chưa có tài khoản? <a href="/register.html">Đăng ký</a>
+  · <a href="/menu.html">Thực đơn</a>
+</p>
       </form>
 
       <section id="profile" class="card" hidden>
         <h1 id="greeting"></h1>
         <p id="profile-email" class="muted"></p>
         <p id="profile-roles" class="muted"></p>
+        <p class="muted"><a href="/profile.html">Sửa hồ sơ</a> · <a href="/menu.html">Thực đơn</a></p>
         <button id="logout" type="button">Đăng xuất</button>
       </section>
     </main>
