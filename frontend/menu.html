@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thực đơn — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/styles/menu.css" />
+  </head>
+  <body>
+    <main class="page menu-page">
+      <section class="card menu-shell">
+        <header class="menu-header">
+          <div>
+            <h1>Thực đơn</h1>
+            <p class="muted">Món đang bán</p>
+          </div>
+          <a class="menu-link" href="/">Đăng nhập</a>
+        </header>
+
+        <p id="menu-error" class="error" hidden></p>
+        <p id="menu-loading" class="muted">Đang tải…</p>
+
+        <div id="menu-filters" class="menu-filters" hidden></div>
+        <div id="menu-list" class="menu-list" hidden></div>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/menu/menu.js"></script>
+  </body>
+</html>
