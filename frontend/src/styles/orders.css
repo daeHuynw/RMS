@@ -1,0 +1,102 @@
+/* QR / orders shared */
+.ok {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.875rem;
+}
+
+.qr-shell {
+  max-width: 48rem;
+}
+
+.qr-token-form {
+  margin-top: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.qr-cart {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.qr-cart h2 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.cart-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+.cart-qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-qty button,
+.btn-add {
+  width: auto;
+  margin-top: 0;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+
+.btn-add {
+  margin-top: 8px;
+}
+
+.menu-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-order-now {
+  background: #0f172a;
+}
+
+.order-card {
+  border-top: 1px solid #e2e8f0;
+  padding: 14px 0;
+}
+
+.order-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.order-lines {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.staff-orders-shell {
+  max-width: 64rem;
+}
+
+select {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font: inherit;
+  background: #fff;
+}

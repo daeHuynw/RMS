@@ -1,5 +1,8 @@
 import { api } from '../../api.js'
 import { requireAdmin } from './requireAdmin.js'
+import { mountAppNav } from '../../nav.js'
+
+await mountAppNav()
 
 const errorEl = document.querySelector('#error')
 const okEl = document.querySelector('#ok')

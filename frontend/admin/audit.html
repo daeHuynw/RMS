@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin · Audit — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/styles/admin.css" />
+  </head>
+  <body>
+    <main class="page admin-page">
+      <section class="card admin-shell">
+        <header class="admin-header">
+          <div>
+            <h1>Audit log</h1>
+            <p class="muted">100 sự kiện gần nhất</p>
+          </div>
+          <nav class="admin-nav" id="admin-nav"></nav>
+        </header>
+        <p id="error" class="error" hidden></p>
+        <p id="loading" class="muted">Đang tải…</p>
+        <table class="admin-table" id="audit-table" hidden>
+          <thead>
+            <tr>
+              <th>Thời gian</th>
+              <th>Actor</th>
+              <th>Action</th>
+              <th>Target</th>
+              <th>Chi tiết</th>
+            </tr>
+          </thead>
+          <tbody id="audit-body"></tbody>
+        </table>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/admin/audit.js"></script>
+  </body>
+</html>

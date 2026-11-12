@@ -1,0 +1,20 @@
+CREATE TABLE reservations (
+  id                BIGINT       NOT NULL AUTO_INCREMENT,
+  user_id           BIGINT       NULL,
+  table_id          BIGINT       NOT NULL,
+  guest_name        VARCHAR(150) NULL,
+  guest_phone       VARCHAR(20)  NULL,
+  reservation_start DATETIME(3)  NOT NULL,
+  reservation_end   DATETIME(3)  NOT NULL,
+  guest_count       INT          NOT NULL,
+  status            VARCHAR(30)  NOT NULL DEFAULT 'PENDING',
+  special_request   VARCHAR(500) NULL,
+  created_at        DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at        DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (id),
+  KEY idx_reservations_user (user_id),
+  KEY idx_reservations_table_time (table_id, reservation_start, reservation_end),
+  KEY idx_reservations_status (status),
+  CONSTRAINT fk_reservations_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL,
+  CONSTRAINT fk_reservations_table FOREIGN KEY (table_id) REFERENCES dining_tables (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

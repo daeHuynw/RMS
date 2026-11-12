@@ -1,8 +1,9 @@
-import { api, accessToken, clearTokens } from '../../api.js'
+import { api } from '../../api.js'
+import { requireRoles } from '../../auth.js'
+import { mountAppNav } from '../../nav.js'
 
-if (!accessToken()) {
-  window.location.href = '/'
-}
+await mountAppNav()
+const me = await requireRoles(['CUSTOMER', 'STAFF', 'KITCHEN', 'ADMIN'])
 
 const error = document.querySelector('#error')
 const ok = document.querySelector('#ok')
@@ -15,18 +16,10 @@ function flash(message, isError) {
   ;(isError ? error : ok).textContent = message
 }
 
-async function load() {
-  try {
-    const me = await api('/auth/me')
-    profileForm.fullName.value = me.fullName
-    profileForm.email.value = me.email
-    profileForm.phone.value = me.phone || ''
-    document.querySelector('#roles').textContent = me.roles.join(', ')
-  } catch {
-    clearTokens()
-    window.location.href = '/'
-  }
-}
+profileForm.fullName.value = me.fullName
+profileForm.email.value = me.email
+profileForm.phone.value = me.phone || ''
+document.querySelector('#roles').textContent = me.roles.join(', ')
 
 profileForm.addEventListener('submit', async (event) => {
   event.preventDefault()
@@ -60,5 +53,3 @@ passwordForm.addEventListener('submit', async (event) => {
     flash(err.message || 'Đổi mật khẩu thất bại', true)
   }
 })
-
-load()

@@ -2,10 +2,96 @@
   align-items: flex-start;
 }
 
+.admin-nav a.active {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.dash-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dash-card strong {
+  font-size: 1.15rem;
+}
+
+.dash-card span,
+.role-box {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.role-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
 .admin-shell {
-  max-width: 56rem;
+  max-width: 64rem;
   width: 100%;
   margin: 24px auto;
+}
+
+.dash-chart-panel {
+  width: 100%;
+}
+
+.dash-chart {
+  margin: 8px 0 12px;
+  min-height: 12rem;
+  overflow-x: auto;
+}
+
+.dash-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 12rem;
+}
+
+.dash-gridline {
+  stroke: #e2e8f0;
+  stroke-width: 1;
+}
+
+.dash-axis {
+  fill: #64748b;
+  font-size: 11px;
+}
+
+.dash-bar {
+  fill: #2563eb;
+}
+
+.dash-bar-revenue {
+  fill: #2563eb;
+}
+
+.dash-bar-peak {
+  fill: #0d9488;
+}
+
+.dash-bar.is-peak {
+  fill: #1d4ed8;
+}
+
+.dash-bar-peak.is-peak {
+  fill: #0f766e;
 }
 
 .admin-header {

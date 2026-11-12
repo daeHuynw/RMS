@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff · Đơn hàng — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/styles/admin.css" />
+    <link rel="stylesheet" href="/src/styles/staff.css" />
+    <link rel="stylesheet" href="/src/styles/orders.css" />
+  </head>
+  <body>
+    <main class="page staff-page">
+      <section class="card staff-shell staff-orders-shell">
+        <header class="staff-header">
+          <div>
+            <h1>Đơn hàng</h1>
+            <p class="muted">Tạo đơn · đổi trạng thái · hủy</p>
+          </div>
+          <nav class="admin-nav">
+            <a href="/kitchen/">Bếp</a>
+            <a href="/staff/tables.html">Sơ đồ bàn</a>
+            <a href="/staff/reservations.html">Đặt bàn</a>
+            <a href="/">Trang chủ</a>
+          </nav>
+        </header>
+        <p id="error" class="error" hidden></p>
+        <p id="ok" class="ok" hidden></p>
+
+        <div class="admin-grid admin-grid-2">
+          <div class="admin-panel">
+            <h2>Tạo đơn (phiên OPEN)</h2>
+            <form id="create-form">
+              <label for="sessionId">Phiên bàn</label>
+              <select id="sessionId" required></select>
+              <label for="menuItemId">Món</label>
+              <select id="menuItemId" required></select>
+              <label for="quantity">Số lượng</label>
+              <input id="quantity" type="number" min="1" max="99" value="1" required />
+              <label for="discountCode">Mã giảm giá</label>
+              <input id="discountCode" maxlength="40" placeholder="SUMMER10" />
+              <label for="customerNote">Ghi chú</label>
+              <textarea id="customerNote" maxlength="500"></textarea>
+              <button type="submit" style="margin-top: 16px">Tạo đơn</button>
+            </form>
+          </div>
+          <div class="admin-panel">
+            <h2>Danh sách đơn</h2>
+            <p id="loading" class="muted">Đang tải…</p>
+            <div id="order-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/orders/staff-orders.js"></script>
+  </body>
+</html>

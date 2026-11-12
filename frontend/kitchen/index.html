@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bếp (KDS) — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/styles/admin.css" />
+    <link rel="stylesheet" href="/src/styles/kitchen.css" />
+  </head>
+  <body>
+    <main class="page kitchen-page">
+      <section class="card kitchen-shell">
+        <header class="kitchen-header">
+          <div>
+            <h1>Màn hình bếp</h1>
+            <p id="ws-status" class="muted">Đang kết nối realtime…</p>
+          </div>
+          <nav class="admin-nav">
+            <a href="/staff/orders.html">Staff đơn</a>
+            <a href="/">Trang chủ</a>
+          </nav>
+        </header>
+        <p id="error" class="error" hidden></p>
+        <div id="ticket-grid" class="ticket-grid"></div>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/kitchen/kitchen.js"></script>
+  </body>
+</html>

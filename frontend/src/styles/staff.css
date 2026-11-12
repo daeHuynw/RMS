@@ -1,0 +1,185 @@
+.staff-page {
+  align-items: flex-start;
+}
+
+.staff-shell {
+  max-width: 64rem;
+  width: 100%;
+  margin: 24px auto;
+}
+
+.staff-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.table-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.table-filter select {
+  min-width: 10rem;
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+}
+
+.table-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.table-legend .dot {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  margin-right: 4px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.table-legend .dot.available { background: #dcfce7; border: 1px solid #16a34a; }
+.table-legend .dot.reserved { background: #fef3c7; border: 1px solid #ca8a04; }
+.table-legend .dot.occupied { background: #2563eb; border: 1px solid #1d4ed8; }
+.table-legend .dot.out { background: #e2e8f0; border: 1px solid #64748b; }
+
+.table-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.table-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  background: #fff;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.table-card h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-card .muted {
+  margin-top: 4px;
+  font-size: 0.85rem;
+}
+
+.table-timer {
+  margin: 10px 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.table-status-line {
+  margin: 10px 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #166534;
+}
+
+.table-session {
+  margin-top: 2px !important;
+}
+
+.status-AVAILABLE {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.status-RESERVED {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.status-RESERVED .table-status-line {
+  color: #a16207;
+}
+
+.status-OCCUPIED,
+.table-card.is-occupied {
+  border-color: #1d4ed8;
+  background: #2563eb;
+  color: #fff;
+}
+
+.status-OCCUPIED .muted,
+.table-card.is-occupied .muted,
+.status-OCCUPIED .table-session,
+.table-card.is-occupied .table-session {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.status-OCCUPIED .table-timer,
+.table-card.is-occupied .table-timer {
+  color: #fff;
+}
+
+.status-OUT_OF_SERVICE {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+  opacity: 0.85;
+}
+
+.status-OUT_OF_SERVICE .table-status-line {
+  color: #475569;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.table-actions button {
+  width: auto;
+  margin-top: 0;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+
+.table-card.is-occupied .table-actions .btn-secondary,
+.status-OCCUPIED .table-actions .btn-secondary {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+
+.table-card.is-occupied .table-actions button:not(.btn-secondary),
+.status-OCCUPIED .table-actions button:not(.btn-secondary) {
+  background: #fff;
+  color: #1d4ed8;
+  border-color: #fff;
+}

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin · Bàn / QR — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/styles/admin.css" />
+  </head>
+  <body>
+    <main class="page admin-page">
+      <section class="card admin-shell">
+        <header class="admin-header">
+          <div>
+            <h1>Bàn &amp; QR</h1>
+            <p class="muted">CRUD bàn · lấy / xoay mã QR</p>
+          </div>
+          <nav class="admin-nav">
+            <a href="/staff/tables.html">Staff sơ đồ</a>
+            <a href="/admin/menu.html">Món</a>
+            <a href="/">Trang chủ</a>
+          </nav>
+        </header>
+
+        <p id="error" class="error" hidden></p>
+        <p id="ok" class="ok" hidden></p>
+
+        <div class="admin-grid admin-grid-2">
+          <div class="admin-panel">
+            <h2 id="form-title">Thêm bàn</h2>
+            <form id="table-form">
+              <input type="hidden" id="tableId" />
+              <label for="tableCode">Mã bàn</label>
+              <input id="tableCode" required maxlength="30" />
+              <label for="capacity">Sức chứa</label>
+              <input id="capacity" type="number" min="1" max="100" required value="4" />
+              <label for="area">Khu vực</label>
+              <input id="area" maxlength="60" />
+              <div class="admin-actions" style="margin-top: 16px">
+                <button type="submit">Lưu</button>
+                <button type="button" id="reset-btn" class="btn-secondary">Hủy sửa</button>
+              </div>
+            </form>
+            <div id="qr-box" hidden style="margin-top: 20px">
+              <h2 style="font-size: 1.05rem; margin: 0">QR bàn đang chọn</h2>
+              <p id="qr-token" class="muted" style="word-break: break-all"></p>
+              <p><a id="qr-link" href="#" target="_blank" rel="noopener">Mở trang gọi món QR</a></p>
+              <div class="admin-actions">
+                <button type="button" id="rotate-btn">Xoay QR mới</button>
+                <button type="button" id="copy-btn" class="btn-secondary">Copy link</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-panel">
+            <h2>Danh sách bàn</h2>
+            <p id="loading" class="muted">Đang tải…</p>
+            <table class="admin-table" id="table-table" hidden>
+              <thead>
+                <tr>
+                  <th>Mã</th>
+                  <th>Chỗ</th>
+                  <th>Khu</th>
+                  <th>TT</th>
+                  <th>QR</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/admin/tables.js"></script>
+  </body>
+</html>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Giỏ hàng — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/styles/orders.css" />
+  </head>
+  <body>
+    <main class="page menu-page">
+      <section class="card menu-shell qr-shell">
+        <header class="menu-header">
+          <div>
+            <h1>Giỏ hàng</h1>
+            <p id="cart-sub" class="muted">Chỉnh số lượng rồi đặt món</p>
+          </div>
+          <a class="menu-link" href="/menu.html">← Thực đơn</a>
+        </header>
+
+        <p id="error" class="error" hidden></p>
+        <p id="ok" class="ok" hidden></p>
+        <p id="hint" class="muted" hidden></p>
+
+        <div id="cart-items" class="qr-cart"></div>
+
+        <div id="checkout" hidden>
+          <label for="customerNote">Ghi chú</label>
+          <textarea id="customerNote" maxlength="500"></textarea>
+          <label for="discountCode">Mã giảm giá</label>
+          <input id="discountCode" maxlength="40" placeholder="tuỳ chọn" />
+          <button type="button" id="place-order">Đặt món</button>
+          <p id="last-order" class="muted" hidden></p>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/cart/cart.js"></script>
+  </body>
+</html>

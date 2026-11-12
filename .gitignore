@@ -1,22 +1,27 @@
+# Secrets — never commit real credentials
 .env
 .env.*
 !.env.example
+**/application-local.yml
+**/application-local.properties
 
-# anh mon an
+# Uploads / runtime
 uploads/
 
-#san pham build: maven, node lib, vite
+# Build
 **/target/
 **/node_modules/
 **/dist/
+*.log
 
-#file cua ide va he dieu hanh
+# IDE / OS
 .idea/
 .vscode/
 *.iml
 .DS_Store
+Thumbs.db
 
-
+# Local mentor notes (not for git)
 flow.md
 checklist.md
 AGENTS.md

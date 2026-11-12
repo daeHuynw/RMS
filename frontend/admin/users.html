@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin · Users — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/styles/admin.css" />
+  </head>
+  <body>
+    <main class="page admin-page">
+      <section class="card admin-shell">
+        <header class="admin-header">
+          <div>
+            <h1>Người dùng</h1>
+            <p class="muted">Tạo STAFF/KITCHEN · gán role · khóa/mở</p>
+          </div>
+          <nav class="admin-nav" id="admin-nav"></nav>
+        </header>
+        <p id="error" class="error" hidden></p>
+        <p id="ok" class="ok" hidden></p>
+
+        <div class="admin-grid admin-grid-2">
+          <div class="admin-panel">
+            <h2>Tạo tài khoản nội bộ</h2>
+            <form id="create-form">
+              <label for="fullName">Họ tên</label>
+              <input id="fullName" required maxlength="150" />
+              <label for="email">Email</label>
+              <input id="email" type="email" required maxlength="190" />
+              <label for="password">Mật khẩu</label>
+              <input id="password" type="password" required minlength="8" />
+              <label for="phone">SĐT</label>
+              <input id="phone" maxlength="20" />
+              <label for="roles">Role</label>
+              <select id="roles" required>
+                <option value="STAFF">STAFF</option>
+                <option value="KITCHEN">KITCHEN</option>
+              </select>
+              <button type="submit" style="margin-top: 16px">Tạo</button>
+            </form>
+          </div>
+          <div class="admin-panel">
+            <h2>Danh sách</h2>
+            <p id="loading" class="muted">Đang tải…</p>
+            <div id="user-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/admin/users.js"></script>
+  </body>
+</html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff · Sơ đồ bàn — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/styles/admin.css" />
+    <link rel="stylesheet" href="/src/styles/staff.css" />
+  </head>
+  <body>
+    <main class="page staff-page">
+      <section class="card staff-shell">
+        <header class="staff-header">
+          <div>
+            <h1>Sơ đồ bàn</h1>
+            <p class="muted">Màu trạng thái · đếm giờ ngồi · lọc khu vực</p>
+          </div>
+          <nav class="admin-nav">
+            <a href="/staff/orders.html">Đơn hàng</a>
+            <a href="/staff/reservations.html">Đặt bàn</a>
+            <a href="/admin/tables.html">Admin bàn</a>
+            <a href="/">Trang chủ</a>
+          </nav>
+        </header>
+        <div class="table-toolbar">
+          <label class="table-filter">
+            <span>Khu vực</span>
+            <select id="area-filter">
+              <option value="">Tất cả</option>
+            </select>
+          </label>
+          <ul class="table-legend" aria-label="Chú thích trạng thái">
+            <li><span class="dot available"></span> Trống</li>
+            <li><span class="dot reserved"></span> Giữ chỗ</li>
+            <li><span class="dot occupied"></span> Đang ngồi</li>
+            <li><span class="dot out"></span> Ngưng</li>
+          </ul>
+        </div>
+        <p id="error" class="error" hidden></p>
+        <p id="ok" class="ok" hidden></p>
+        <p id="loading" class="muted">Đang tải…</p>
+        <p id="empty" class="muted" hidden>Không có bàn trong khu vực này.</p>
+        <div id="table-grid" class="table-grid" hidden></div>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/tables/staff-tables.js"></script>
+  </body>
+</html>

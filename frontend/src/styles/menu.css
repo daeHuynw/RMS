@@ -1,0 +1,92 @@
+.menu-page {
+  align-items: flex-start;
+}
+
+.menu-shell {
+  max-width: 40rem;
+  margin: 24px auto;
+}
+
+.menu-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.menu-link {
+  margin-top: 4px;
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.menu-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.chip {
+  width: auto;
+  margin-top: 0;
+  padding: 6px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  cursor: pointer;
+}
+
+.chip-active {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
+.menu-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.menu-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-item h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.menu-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  background: #f1f5f9;
+}
+
+.menu-thumb-empty {
+  display: inline-block;
+}
+
+.price {
+  margin: 0;
+  font-weight: 700;
+  white-space: nowrap;
+}

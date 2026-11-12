@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin · Cài đặt — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/styles/admin.css" />
+  </head>
+  <body>
+    <main class="page admin-page">
+      <section class="card admin-shell">
+        <header class="admin-header">
+          <div>
+            <h1>Cài đặt nhà hàng</h1>
+            <p class="muted">Thuế · thời lượng đặt bàn tối đa</p>
+          </div>
+          <nav class="admin-nav" id="admin-nav"></nav>
+        </header>
+        <p id="error" class="error" hidden></p>
+        <p id="ok" class="ok" hidden></p>
+        <form id="settings-form" class="admin-panel" style="max-width: 28rem">
+          <label for="taxRate">Thuế (vd 0.08 = 8%)</label>
+          <input id="taxRate" type="number" min="0" step="0.0001" required />
+          <label for="reservationDurationMinutes">Đặt bàn tối đa (phút)</label>
+          <input id="reservationDurationMinutes" type="number" min="30" max="240" required />
+          <p id="updatedAt" class="muted"></p>
+          <button type="submit" style="margin-top: 16px">Lưu</button>
+        </form>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/admin/settings.js"></script>
+  </body>
+</html>

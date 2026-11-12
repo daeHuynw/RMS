@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff · Đặt bàn — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/styles/admin.css" />
+    <link rel="stylesheet" href="/src/styles/staff.css" />
+  </head>
+  <body>
+    <main class="page staff-page">
+      <section class="card staff-shell">
+        <header class="staff-header">
+          <div>
+            <h1>Quản lý đặt bàn</h1>
+            <p class="muted">Xác nhận · từ chối · check-in · hoàn tất</p>
+          </div>
+          <nav class="admin-nav">
+            <a href="/staff/tables.html">Sơ đồ bàn</a>
+            <a href="/">Trang chủ</a>
+          </nav>
+        </header>
+        <p id="error" class="error" hidden></p>
+        <p id="ok" class="ok" hidden></p>
+        <p id="loading" class="muted">Đang tải…</p>
+        <table class="admin-table" id="res-table" hidden>
+          <thead>
+            <tr>
+              <th>Bàn</th>
+              <th>Khách</th>
+              <th>Thời gian</th>
+              <th>TT</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="res-body"></tbody>
+        </table>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/reservations/staff-reservations.js"></script>
+  </body>
+</html>

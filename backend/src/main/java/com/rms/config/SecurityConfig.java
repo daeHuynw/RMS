@@ -46,17 +46,32 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Lỗi 5xx forward sang /error; nếu bắt auth ở đây sẽ thành 401 giả (nuốt lỗi gốc).
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/v1/health").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/auth/register").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/menu", "/api/v1/menu/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/menu-images/**").permitAll()
+                        .requestMatchers("/api/v1/qr/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/tables/availability").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/discounts/validate").permitAll()
+                        .requestMatchers("/ws", "/ws/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/staff/**").hasAnyRole("STAFF", "ADMIN")
+                        .requestMatchers("/api/v1/kitchen/**").hasAnyRole("KITCHEN", "STAFF", "ADMIN")
+                        .requestMatchers("/api/v1/reservations/**").authenticated()
+                        .requestMatchers("/api/v1/orders/**").authenticated()
+                        .requestMatchers("/api/v1/invoices/**").authenticated()
+                        .requestMatchers("/api/v1/notifications/**").authenticated()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(
-                        (request, response, failure) -> writeUnauthorized(objectMapper, request, response)))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(
+                                (request, response, failure) -> writeUnauthorized(objectMapper, request, response))
+                        .accessDeniedHandler(
+                                (request, response, failure) -> writeForbidden(objectMapper, request, response)))
                 .build();
     }
 
@@ -66,5 +81,13 @@ public class SecurityConfig {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         mapper.writeValue(response.getOutputStream(),
                 new ApiError(Instant.now(), 401, "UNAUTHORIZED", "Authentication required", null, request.getRequestURI()));
+    }
+
+    private static void writeForbidden(ObjectMapper mapper, HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        response.setStatus(HttpStatus.FORBIDDEN.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        mapper.writeValue(response.getOutputStream(),
+                new ApiError(Instant.now(), 403, "FORBIDDEN", "Access denied", null, request.getRequestURI()));
     }
 }

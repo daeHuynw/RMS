@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin · Dashboard — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/styles/admin.css" />
+  </head>
+  <body>
+    <main class="page admin-page">
+      <section class="card admin-shell">
+        <header class="admin-header">
+          <div>
+            <h1>Dashboard</h1>
+            <p class="muted">Overview · biểu đồ doanh thu · top món · giờ cao điểm</p>
+          </div>
+          <nav class="admin-nav" id="admin-nav"></nav>
+        </header>
+
+        <p id="error" class="error" hidden></p>
+
+        <form id="range-form" class="admin-actions" style="margin-top: 12px">
+          <label>Từ <input id="from" type="date" required /></label>
+          <label>Đến <input id="to" type="date" required /></label>
+          <button type="submit">Xem</button>
+        </form>
+
+        <div id="overview" class="dash-grid" hidden></div>
+
+        <div class="admin-panel dash-chart-panel" style="margin-top: 20px">
+          <h2>Doanh thu theo ngày</h2>
+          <div id="revenue-chart" class="dash-chart" role="img" aria-label="Biểu đồ cột doanh thu theo ngày"></div>
+          <div id="revenue-list" class="muted">—</div>
+        </div>
+
+        <div class="admin-panel dash-chart-panel" style="margin-top: 16px">
+          <h2>Giờ cao điểm (số đơn)</h2>
+          <div id="peak-chart" class="dash-chart" role="img" aria-label="Biểu đồ cột số đơn theo giờ"></div>
+          <div id="peak-list" class="muted">—</div>
+        </div>
+
+        <div class="admin-grid admin-grid-2" style="margin-top: 20px">
+          <div class="admin-panel">
+            <h2>Đơn theo trạng thái</h2>
+            <div id="order-stats" class="muted">—</div>
+          </div>
+          <div class="admin-panel">
+            <h2>Top món</h2>
+            <div id="top-list" class="muted">—</div>
+          </div>
+          <div class="admin-panel">
+            <h2>Thông báo của tôi</h2>
+            <p id="notif-unread" class="muted"></p>
+            <div id="notif-list" class="muted">—</div>
+            <button type="button" id="notif-read-all" class="btn-secondary" style="margin-top: 8px">Đánh dấu đã đọc</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/admin/dashboard.js"></script>
+  </body>
+</html>

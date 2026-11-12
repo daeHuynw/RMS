@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đơn của tôi — RMS</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/styles/admin.css" />
+    <link rel="stylesheet" href="/src/styles/orders.css" />
+  </head>
+  <body>
+    <main class="page admin-page">
+      <section class="card admin-shell">
+        <header class="admin-header">
+          <div>
+            <h1>Đơn của tôi</h1>
+            <p class="muted">Các đơn gắn với tài khoản khi gọi món QR (đã đăng nhập)</p>
+          </div>
+          <nav class="admin-nav">
+            <a href="/reservations.html">Đặt bàn</a>
+            <a href="/menu.html">Thực đơn</a>
+            <a href="/">Trang chủ</a>
+          </nav>
+        </header>
+        <p id="error" class="error" hidden></p>
+        <p id="loading" class="muted">Đang tải…</p>
+        <div id="order-list"></div>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/orders/my-orders.js"></script>
+  </body>
+</html>

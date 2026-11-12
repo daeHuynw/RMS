@@ -1,0 +1,35 @@
+.avail-list {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.avail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.avail-row button {
+  width: auto;
+  margin-top: 0;
+  padding: 6px 12px;
+}
+
+.res-card {
+  border-top: 1px solid #e2e8f0;
+  padding: 12px 0;
+}
+
+.res-card .badge {
+  margin-left: 8px;
+}
+
+.res-card button {
+  width: auto;
+  margin-top: 8px;
+  padding: 6px 12px;
+}

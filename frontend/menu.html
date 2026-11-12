@@ -6,20 +6,23 @@
     <title>Thực đơn — RMS</title>
     <link rel="stylesheet" href="/src/style.css" />
     <link rel="stylesheet" href="/src/styles/menu.css" />
+    <link rel="stylesheet" href="/src/styles/orders.css" />
   </head>
   <body>
     <main class="page menu-page">
-      <section class="card menu-shell">
+      <section class="card menu-shell qr-shell">
         <header class="menu-header">
           <div>
             <h1>Thực đơn</h1>
-            <p class="muted">Món đang bán</p>
+            <p id="menu-sub" class="muted">Món đang bán</p>
           </div>
-          <a class="menu-link" href="/">Đăng nhập</a>
+          <a id="goto-cart" class="menu-link" href="/cart.html" hidden>Xem giỏ →</a>
         </header>
 
         <p id="menu-error" class="error" hidden></p>
+        <p id="menu-ok" class="ok" hidden></p>
         <p id="menu-loading" class="muted">Đang tải…</p>
+        <p id="order-hint" class="muted" hidden></p>
 
         <div id="menu-filters" class="menu-filters" hidden></div>
         <div id="menu-list" class="menu-list" hidden></div>

@@ -1,4 +1,7 @@
 import { api } from '../../api.js'
+import { mountAppNav } from '../../nav.js'
+
+await mountAppNav()
 
 const form = document.querySelector('#register-form')
 const error = document.querySelector('#error')

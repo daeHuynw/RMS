@@ -27,4 +27,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("select count(u) from User u join u.roles r where u.active = true and r.name = 'ADMIN'")
     long countActiveAdmins();
+
+    @EntityGraph(attributePaths = "roles")
+    @Query("""
+            select distinct u from User u join u.roles r
+            where u.active = true and r.name in :roles
+            """)
+    List<User> findActiveByRoleNames(@Param("roles") List<String> roles);
 }

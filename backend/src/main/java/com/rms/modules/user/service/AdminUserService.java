@@ -1,6 +1,7 @@
 package com.rms.modules.user.service;
 
 import com.rms.exception.ApiException;
+import com.rms.modules.audit.service.AuditService;
 import com.rms.modules.role.entity.Role;
 import com.rms.modules.role.repository.RoleRepository;
 import com.rms.modules.user.dto.AdminUserDtos.Create;
@@ -24,11 +25,17 @@ public class AdminUserService {
     private final UserRepository users;
     private final RoleRepository roles;
     private final PasswordEncoder passwords;
+    private final AuditService audit;
 
-    public AdminUserService(UserRepository users, RoleRepository roles, PasswordEncoder passwords) {
+    public AdminUserService(
+            UserRepository users,
+            RoleRepository roles,
+            PasswordEncoder passwords,
+            AuditService audit) {
         this.users = users;
         this.roles = roles;
         this.passwords = passwords;
+        this.audit = audit;
     }
 
     @Transactional(readOnly = true)
@@ -55,7 +62,9 @@ public class AdminUserService {
                 passwords.encode(request.password()),
                 blankToNull(request.phone()));
         user.getRoles().addAll(assigned);
-        return view(users.save(user));
+        User saved = users.save(user);
+        audit.record("USER_CREATED", "USER", String.valueOf(saved.getId()), saved.getEmail());
+        return view(saved);
     }
 
     @Transactional
@@ -72,6 +81,7 @@ public class AdminUserService {
         }
         user.getRoles().clear();
         user.getRoles().addAll(assigned);
+        audit.record("USER_ROLES_UPDATED", "USER", String.valueOf(user.getId()), String.join(",", roleNames));
         return view(user);
     }
 
@@ -84,6 +94,7 @@ public class AdminUserService {
                     "Cannot deactivate the last active administrator");
         }
         user.setActive(active);
+        audit.record(active ? "USER_ACTIVATED" : "USER_DEACTIVATED", "USER", String.valueOf(user.getId()), user.getEmail());
         return view(user);
     }
 
