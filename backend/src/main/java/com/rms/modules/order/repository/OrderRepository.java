@@ -1,7 +1,9 @@
 package com.rms.modules.order.repository;
 
 import com.rms.modules.order.entity.Order;
+import com.rms.modules.order.entity.OrderStatus;
 import jakarta.persistence.LockModeType;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -17,6 +19,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> lockById(@Param("id") Long id);
 
     Optional<Order> findByIdempotencyKey(String idempotencyKey);
+
+    /** Phiên còn đơn nào ở trạng thái KHÁC các trạng thái đã cho không (vd còn đơn chưa xong/chưa huỷ). */
+    boolean existsByTableSession_IdAndStatusNotIn(Long tableSessionId, Collection<OrderStatus> statuses);
 
     @EntityGraph(attributePaths = {"items", "tableSession", "tableSession.table", "user"})
     @Query("select o from Order o where o.id = :id")

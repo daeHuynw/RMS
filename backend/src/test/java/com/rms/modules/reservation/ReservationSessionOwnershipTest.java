@@ -72,7 +72,8 @@ class ReservationSessionOwnershipTest {
         users = mock(UserRepository.class);
 
         reservationService = new ReservationService(reservations, tables, sessions, users, mock(SettingsService.class));
-        tableService = new TableService(tables, sessions, users, mock(QrTokenService.class), reservations);
+        tableService = new TableService(
+                tables, sessions, users, mock(QrTokenService.class), reservations, mock(OrderRepository.class));
         orderService = new OrderService(
                 mock(OrderRepository.class),
                 mock(MenuItemRepository.class),
