@@ -8,8 +8,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +22,15 @@ public class DashboardService {
 
     private final DashboardRepository reports;
     private final DiningTableRepository tables;
+    private final ZoneId zone;
 
-    public DashboardService(DashboardRepository reports, DiningTableRepository tables) {
+    public DashboardService(
+            DashboardRepository reports,
+            DiningTableRepository tables,
+            @Value("${rms.time-zone:Asia/Ho_Chi_Minh}") ZoneId zone) {
         this.reports = reports;
         this.tables = tables;
+        this.zone = zone;
     }
 
     public Overview overview(LocalDate from, LocalDate to) {
@@ -39,7 +46,7 @@ public class DashboardService {
 
     public Revenue revenue(LocalDate from, LocalDate to) {
         Range range = range(from, to);
-        return new Revenue(reports.revenue(range.start, range.end), reports.revenueByDay(range.start, range.end));
+        return new Revenue(reports.revenue(range.start, range.end), reports.revenueByDay(range.start, range.end, range.offset));
     }
 
     public OrderStats orders(LocalDate from, LocalDate to) {
@@ -58,7 +65,7 @@ public class DashboardService {
 
     public List<DashboardRepository.HourRow> peakHours(LocalDate from, LocalDate to) {
         Range range = range(from, to);
-        return reports.peakHours(range.start, range.end);
+        return reports.peakHours(range.start, range.end, range.offset);
     }
 
     public List<DashboardRepository.TopSellingRow> topSelling(LocalDate from, LocalDate to, int limit) {
@@ -69,16 +76,28 @@ public class DashboardService {
         return reports.topSelling(range.start, range.end, PageRequest.of(0, limit));
     }
 
-    private static Range range(LocalDate from, LocalDate to) {
+    /**
+     * from/to là ngày theo lịch nhà hàng (rms.time-zone). DB lưu UTC, nên đổi
+     * "00:00 giờ nhà hàng" sang Instant; không cắt ngày theo UTC.
+     */
+    private Range range(LocalDate from, LocalDate to) {
         if (from == null || to == null || to.isBefore(from)) {
             throw ApiException.badRequest("INVALID_RANGE", "from/to required and to must not precede from");
         }
-        return new Range(
-                from.atStartOfDay().toInstant(ZoneOffset.UTC),
-                to.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC));
+        Instant start = from.atStartOfDay(zone).toInstant();
+        Instant end = to.plusDays(1).atStartOfDay(zone).toInstant();
+        return new Range(start, end, sqlOffset(zone.getRules().getOffset(start)));
     }
 
-    private record Range(Instant start, Instant end) {
+    /**
+     * Offset dạng "+07:00" cho CONVERT_TZ của MySQL (ZoneOffset.UTC in ra "Z", MySQL không hiểu).
+     * Lấy offset tại đầu khoảng: đúng tuyệt đối với vùng không đổi giờ mùa hè như Việt Nam.
+     */
+    private static String sqlOffset(ZoneOffset offset) {
+        return ZoneOffset.UTC.equals(offset) ? "+00:00" : offset.getId();
+    }
+
+    private record Range(Instant start, Instant end, String offset) {
     }
 
     public record Overview(
