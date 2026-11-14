@@ -1,9 +1,6 @@
 package com.rms.modules.table.service;
 
 import com.rms.exception.ApiException;
-import com.rms.modules.menu.dto.MenuDtos.MenuItemResponse;
-import com.rms.modules.menu.service.MenuService;
-import com.rms.modules.table.dto.TableDtos.QrMenuResponse;
 import com.rms.modules.table.dto.TableDtos.QrTokenResponse;
 import com.rms.modules.table.dto.TableDtos.SessionResponse;
 import com.rms.modules.table.dto.TableDtos.TableRequest;
@@ -28,19 +25,16 @@ public class TableService {
     private final TableSessionRepository sessions;
     private final UserRepository users;
     private final QrTokenService qrTokens;
-    private final MenuService menu;
 
     public TableService(
             DiningTableRepository tables,
             TableSessionRepository sessions,
             UserRepository users,
-            QrTokenService qrTokens,
-            MenuService menu) {
+            QrTokenService qrTokens) {
         this.tables = tables;
         this.sessions = sessions;
         this.users = users;
         this.qrTokens = qrTokens;
-        this.menu = menu;
     }
 
     @Transactional(readOnly = true)
@@ -165,68 +159,6 @@ public class TableService {
             raw = qrTokens.rotate(table);
         }
         return toQr(table, raw);
-    }
-
-    @Transactional
-    public QrMenuResponse qrMenu(String token) {
-        DiningTable table = validQrTable(token);
-        TableSession session = ensureOpenSession(table);
-        List<MenuItemResponse> items = menu.catalog().items();
-        return new QrMenuResponse(
-                session.getId(),
-                table.getId(),
-                table.getTableCode(),
-                session.getOpenedAt(),
-                items);
-    }
-
-    @Transactional
-    public SessionResponse qrSession(String token) {
-        DiningTable table = validQrTable(token);
-        return toSession(ensureOpenSession(table));
-    }
-
-    /** Resolve QR → open table session (auto-open if needed). Used by OrderService. */
-    @Transactional
-    public TableSession resolveOpenSession(String token) {
-        return ensureOpenSession(validQrTable(token));
-    }
-
-    private TableSession ensureOpenSession(DiningTable table) {
-        return sessions.findByTableIdAndStatus(table.getId(), TableSession.Status.OPEN)
-                .orElseGet(() -> {
-                    if (table.getStatus() == TableStatus.OUT_OF_SERVICE) {
-                        throw ApiException.conflict("TABLE_UNAVAILABLE", "Table is out of service");
-                    }
-                    DiningTable locked = tables.lockById(table.getId())
-                            .orElseThrow(() -> ApiException.notFound("Table not found"));
-                    return sessions.findByTableIdAndStatus(locked.getId(), TableSession.Status.OPEN)
-                            .orElseGet(() -> {
-                                try {
-                                    TableSession created = sessions.saveAndFlush(
-                                            new TableSession(locked, null, Instant.now()));
-                                    locked.setStatus(TableStatus.OCCUPIED);
-                                    return created;
-                                } catch (DataIntegrityViolationException ex) {
-                                    return sessions.findByTableIdAndStatus(locked.getId(), TableSession.Status.OPEN)
-                                            .orElseThrow(() -> ApiException.conflict(
-                                                    "SESSION_ALREADY_OPEN",
-                                                    "Table already has an open session"));
-                                }
-                            });
-                });
-    }
-
-    private DiningTable validQrTable(String token) {
-        if (token == null || token.isBlank() || token.length() > 100) {
-            throw ApiException.notFound("Invalid QR token");
-        }
-        DiningTable table = tables.findByQrTokenHash(QrTokenService.hash(token))
-                .orElseThrow(() -> ApiException.notFound("Invalid QR token"));
-        if (!qrTokens.matches(table, token)) {
-            throw ApiException.notFound("Invalid QR token");
-        }
-        return table;
     }
 
     private DiningTable requireTable(Long id) {

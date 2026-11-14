@@ -1,6 +1,5 @@
 package com.rms.modules.table.dto;
 
-import com.rms.modules.menu.dto.MenuDtos.MenuItemResponse;
 import com.rms.modules.table.entity.TableStatus;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -8,7 +7,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
-import java.util.List;
 
 public final class TableDtos {
 
@@ -45,13 +43,5 @@ public final class TableDtos {
             String status,
             Instant openedAt,
             Instant closedAt) {
-    }
-
-    public record QrMenuResponse(
-            Long sessionId,
-            Long tableId,
-            String tableCode,
-            Instant openedAt,
-            List<MenuItemResponse> items) {
     }
 }

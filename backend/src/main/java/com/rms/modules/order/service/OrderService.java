@@ -26,7 +26,6 @@ import com.rms.modules.reservation.repository.ReservationRepository;
 import com.rms.modules.settings.service.SettingsService;
 import com.rms.modules.table.entity.TableSession;
 import com.rms.modules.table.repository.TableSessionRepository;
-import com.rms.modules.table.service.TableService;
 import com.rms.modules.user.entity.User;
 import com.rms.modules.user.repository.UserRepository;
 import java.math.BigDecimal;
@@ -45,7 +44,6 @@ public class OrderService {
     private final OrderRepository orders;
     private final MenuItemRepository menuItems;
     private final TableSessionRepository sessions;
-    private final TableService tables;
     private final ReservationRepository reservations;
     private final UserRepository users;
     private final DiscountService discounts;
@@ -58,7 +56,6 @@ public class OrderService {
             OrderRepository orders,
             MenuItemRepository menuItems,
             TableSessionRepository sessions,
-            TableService tables,
             ReservationRepository reservations,
             UserRepository users,
             DiscountService discounts,
@@ -69,7 +66,6 @@ public class OrderService {
         this.orders = orders;
         this.menuItems = menuItems;
         this.sessions = sessions;
-        this.tables = tables;
         this.reservations = reservations;
         this.users = users;
         this.discounts = discounts;
@@ -110,13 +106,6 @@ public class OrderService {
     }
 
     @Transactional
-    public Response createFromQr(String token, CreateRequest request, String idempotencyKey, Long userId) {
-        TableSession session = tables.resolveOpenSession(token);
-        User user = userId == null ? null : requireActiveUser(userId);
-        return create(session, request, user, user, idempotencyKey);
-    }
-
-    @Transactional
     public Response createFromStaff(long tableSessionId, CreateRequest request, String idempotencyKey, Long staffId) {
         TableSession session = sessions.lockById(tableSessionId)
                 .orElseThrow(() -> ApiException.notFound("Session not found"));
@@ -125,16 +114,6 @@ public class OrderService {
         }
         User staff = requireActiveUser(staffId);
         return create(session, request, null, staff, idempotencyKey);
-    }
-
-    @Transactional(readOnly = true)
-    public Response trackByQr(String token, Long orderId) {
-        TableSession session = tables.resolveOpenSession(token);
-        Order order = requireWithDetails(orderId);
-        if (order.getTableSession() == null || !order.getTableSession().getId().equals(session.getId())) {
-            throw ApiException.forbidden("Order does not belong to this QR session");
-        }
-        return Response.from(order);
     }
 
     @Transactional(readOnly = true)
