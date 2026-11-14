@@ -55,8 +55,7 @@ public class ReservationService {
         return tables.findAllByOrderByTableCodeAsc().stream()
                 .filter(table -> table.getCapacity() >= guestCount)
                 .filter(table -> table.getStatus() != TableStatus.OUT_OF_SERVICE)
-                .filter(table -> table.getStatus() != TableStatus.OCCUPIED)
-                .filter(table -> !sessions.existsByTableIdAndStatus(table.getId(), TableSession.Status.OPEN))
+                .filter(table -> !heldBySeatedParty(table.getId(), start))
                 .filter(table -> !reservations.existsOverlap(table.getId(), start, end, BLOCKING))
                 .map(table -> new Availability(
                         table.getId(), table.getTableCode(), table.getCapacity(), table.getArea()))
@@ -72,11 +71,12 @@ public class ReservationService {
 
         DiningTable table = tables.lockById(request.tableId())
                 .orElseThrow(() -> ApiException.notFound("Table not found"));
-        if (table.getStatus() == TableStatus.OUT_OF_SERVICE || table.getStatus() == TableStatus.OCCUPIED) {
-            throw ApiException.conflict("TABLE_UNAVAILABLE", "Table is not available for reservation");
+        // Trạng thái bàn chỉ nói về hiện tại (REVIEW B5): OCCUPIED / RESERVED hôm nay không chặn tuần sau.
+        if (table.getStatus() == TableStatus.OUT_OF_SERVICE) {
+            throw ApiException.conflict("TABLE_UNAVAILABLE", "Table is out of service");
         }
-        if (sessions.existsByTableIdAndStatus(table.getId(), TableSession.Status.OPEN)) {
-            throw ApiException.conflict("TABLE_UNAVAILABLE", "Table already has an open session");
+        if (heldBySeatedParty(table.getId(), request.start())) {
+            throw ApiException.conflict("TABLE_UNAVAILABLE", "Table is occupied around the requested time");
         }
         if (table.getCapacity() < request.guestCount()) {
             throw ApiException.badRequest("CAPACITY_EXCEEDED", "Party exceeds table capacity");
@@ -175,21 +175,15 @@ public class ReservationService {
             if (!conflicts.isEmpty()) {
                 throw ApiException.conflict("RESERVATION_CONFLICT", "Table is not available for the requested interval");
             }
-            reservation.getTable().setStatus(TableStatus.RESERVED);
+            // Không gán bàn RESERVED: lượt đặt có thể là cho tuần sau, còn trạng thái bàn là của hiện tại.
         }
         if (next == ReservationStatus.CHECKED_IN) {
             DiningTable table = reservation.getTable();
             openSessionFor(reservation, userId);
             table.setStatus(TableStatus.OCCUPIED);
         }
-        if (next == ReservationStatus.COMPLETED
-                || next == ReservationStatus.CANCELLED
-                || next == ReservationStatus.REJECTED
-                || next == ReservationStatus.NO_SHOW) {
-            if (!sessions.existsByTableIdAndStatus(reservation.getTable().getId(), TableSession.Status.OPEN)) {
-                reservation.getTable().setStatus(TableStatus.AVAILABLE);
-            }
-        }
+        // Kết thúc lượt đặt (hoàn tất / huỷ / từ chối / vắng mặt) không đụng trạng thái bàn:
+        // bàn chỉ về AVAILABLE khi phiên của nó đóng (TableService.closeSession).
 
         reservation.transition(next);
         return Response.from(reservation);
@@ -226,6 +220,18 @@ public class ReservationService {
             throw ApiException.conflict(
                     "TABLE_OCCUPIED", "Table still has an open session — close it before check-in");
         }
+    }
+
+    /**
+     * Bàn đang có khách ngồi (phiên mở) được coi như bị giữ từ lúc mở phiên đến hết thời lượng
+     * đặt bàn trong cài đặt. Chỉ khung giờ bắt đầu trước mốc đó mới bị chặn; tuần sau thì không.
+     * (start luôn ở tương lai nên không cần so với đầu khoảng.)
+     */
+    private boolean heldBySeatedParty(Long tableId, Instant start) {
+        Duration expectedStay = Duration.ofMinutes(settings.reservationDurationMinutes());
+        return sessions.findByTableIdAndStatus(tableId, TableSession.Status.OPEN)
+                .map(session -> start.isBefore(session.getOpenedAt().plus(expectedStay)))
+                .orElse(false);
     }
 
     private void validateInterval(Instant start, Instant end, int guestCount) {
