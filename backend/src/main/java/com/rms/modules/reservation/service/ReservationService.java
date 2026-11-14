@@ -179,8 +179,8 @@ public class ReservationService {
         }
         if (next == ReservationStatus.CHECKED_IN) {
             DiningTable table = reservation.getTable();
+            openSessionFor(reservation, userId);
             table.setStatus(TableStatus.OCCUPIED);
-            openSessionIfNeeded(table, userId);
         }
         if (next == ReservationStatus.COMPLETED
                 || next == ReservationStatus.CANCELLED
@@ -208,19 +208,23 @@ public class ReservationService {
         return reservations.findById(id).orElseThrow(() -> ApiException.notFound("Reservation not found"));
     }
 
-    /** Check-in luôn kèm phiên OPEN để customer gọi món gắn bàn. */
-    private void openSessionIfNeeded(DiningTable table, Long staffUserId) {
+    /**
+     * Check-in mở một phiên RIÊNG cho lượt đặt này (table_sessions.reservation_id).
+     * Bàn còn phiên mở thì đó là phiên của nhóm khác (vãng lai hoặc lượt đặt khác): không dùng chung,
+     * staff phải đóng phiên đó trước. Dòng bàn đã được khoá ở đầu transition nên không có đua.
+     */
+    private void openSessionFor(Reservation reservation, Long staffUserId) {
+        DiningTable table = reservation.getTable();
         if (sessions.existsByTableIdAndStatus(table.getId(), TableSession.Status.OPEN)) {
-            return;
+            throw ApiException.conflict(
+                    "TABLE_OCCUPIED", "Table still has an open session — close it before check-in");
         }
         User opener = users.findById(staffUserId).orElse(null);
         try {
-            sessions.saveAndFlush(new TableSession(table, opener, Instant.now()));
+            sessions.saveAndFlush(new TableSession(table, opener, Instant.now(), reservation.getId()));
         } catch (DataIntegrityViolationException ex) {
-            // race: phiên vừa được mở song song
-            if (!sessions.existsByTableIdAndStatus(table.getId(), TableSession.Status.OPEN)) {
-                throw ApiException.conflict("SESSION_ALREADY_OPEN", "Could not open table session");
-            }
+            throw ApiException.conflict(
+                    "TABLE_OCCUPIED", "Table still has an open session — close it before check-in");
         }
     }
 
