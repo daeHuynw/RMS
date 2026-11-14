@@ -35,12 +35,16 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderService {
+
+    /** Số đơn tối đa trả về cho danh sách của staff. */
+    private static final int STAFF_LIST_LIMIT = 200;
 
     private final OrderRepository orders;
     private final MenuItemRepository menuItems;
@@ -129,7 +133,13 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public List<Response> listAll() {
-        return orders.findAllByOrderByCreatedAtDesc().stream().map(Response::from).toList();
+        // Tối đa STAFF_LIST_LIMIT đơn mới nhất (REVIEW C1). Hai bước: lấy id có LIMIT, rồi nạp chi tiết —
+        // LIMIT đi cùng fetch join "items" sẽ bị Hibernate phân trang trong bộ nhớ.
+        List<Long> ids = orders.findRecentIds(PageRequest.of(0, STAFF_LIST_LIMIT));
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return orders.findWithDetailsByIdIn(ids).stream().map(Response::from).toList();
     }
 
     @Transactional(readOnly = true)

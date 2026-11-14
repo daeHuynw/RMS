@@ -6,6 +6,7 @@ import jakarta.persistence.LockModeType;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -30,6 +31,20 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @EntityGraph(attributePaths = {"items", "tableSession", "tableSession.table", "user"})
     List<Order> findByUser_IdOrderByCreatedAtDesc(Long userId);
 
+    /** Đơn theo trạng thái — để CSDL lọc, không nạp cả bảng rồi lọc trong bộ nhớ (REVIEW C1). */
     @EntityGraph(attributePaths = {"items", "tableSession", "tableSession.table", "user"})
-    List<Order> findAllByOrderByCreatedAtDesc();
+    @Query("select o from Order o where o.status in :statuses order by o.createdAt desc, o.id desc")
+    List<Order> findWithDetailsByStatusIn(@Param("statuses") Collection<OrderStatus> statuses);
+
+    /**
+     * Bước 1 của "N đơn mới nhất": chỉ lấy id, có LIMIT. Không gộp với bước 2 vì LIMIT đi cùng
+     * fetch join một tập (items) buộc Hibernate phân trang trong bộ nhớ.
+     */
+    @Query("select o.id from Order o order by o.createdAt desc, o.id desc")
+    List<Long> findRecentIds(Pageable pageable);
+
+    /** Bước 2: nạp đầy đủ đúng các đơn đó. */
+    @EntityGraph(attributePaths = {"items", "tableSession", "tableSession.table", "user"})
+    @Query("select o from Order o where o.id in :ids order by o.createdAt desc, o.id desc")
+    List<Order> findWithDetailsByIdIn(@Param("ids") Collection<Long> ids);
 }

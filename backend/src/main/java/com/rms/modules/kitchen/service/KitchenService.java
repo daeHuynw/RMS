@@ -48,8 +48,8 @@ public class KitchenService {
 
     @Transactional(readOnly = true)
     public List<Ticket> queue() {
-        return orders.findAllByOrderByCreatedAtDesc().stream()
-                .filter(order -> IN_KITCHEN.contains(order.getStatus()))
+        // CSDL lọc theo trạng thái (index idx_orders_status); không nạp cả bảng đơn (REVIEW C1).
+        return orders.findWithDetailsByStatusIn(IN_KITCHEN).stream()
                 .filter(order -> order.getItems().stream()
                         .anyMatch(item -> item.getStatus() != OrderItemStatus.CANCELLED))
                 .map(Ticket::from)
