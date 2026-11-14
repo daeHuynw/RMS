@@ -273,11 +273,7 @@ public class OrderService {
 
         var existing = orders.findByIdempotencyKey(key);
         if (existing.isPresent()) {
-            Order found = existing.get();
-            if (found.getTableSession() == null || !Objects.equals(found.getTableSession().getId(), locked.getId())) {
-                throw ApiException.conflict("IDEMPOTENCY_KEY_REUSED", "Idempotency-Key was already used");
-            }
-            return Response.from(requireWithDetails(found.getId()));
+            return replay(existing.get(), locked, creator);
         }
 
         List<MenuItem> resolved = request.items().stream()
@@ -327,9 +323,26 @@ public class OrderService {
             return Response.from(detailed);
         } catch (DataIntegrityViolationException ex) {
             return orders.findByIdempotencyKey(key)
-                    .map(o -> Response.from(requireWithDetails(o.getId())))
+                    .map(found -> replay(found, locked, creator))
                     .orElseThrow(() -> ex);
         }
+    }
+
+    /**
+     * Idempotency-Key đã được dùng. Chỉ trả lại đơn cũ khi đây đúng là một lần GỬI LẠI:
+     * cùng người tạo và cùng phiên bàn. Ai khác gửi key đó thì nhận 409, không nhận đơn của
+     * người kia (REVIEW C3). Đơn không rõ người tạo cũng không bao giờ được trả ra.
+     */
+    private Response replay(Order found, TableSession session, User creator) {
+        boolean sameSession = found.getTableSession() != null
+                && Objects.equals(found.getTableSession().getId(), session.getId());
+        boolean sameCreator = found.getCreatedBy() != null
+                && creator != null
+                && Objects.equals(found.getCreatedBy().getId(), creator.getId());
+        if (!sameSession || !sameCreator) {
+            throw ApiException.conflict("IDEMPOTENCY_KEY_REUSED", "Idempotency-Key was already used");
+        }
+        return Response.from(requireWithDetails(found.getId()));
     }
 
     private void publishKitchen(String eventType, Order order) {
