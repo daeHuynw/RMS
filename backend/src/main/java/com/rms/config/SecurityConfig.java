@@ -55,7 +55,6 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/menu", "/api/v1/menu/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/menu-images/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/tables/availability").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/discounts/validate").permitAll()
                         .requestMatchers("/ws", "/ws/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/staff/**").hasAnyRole("STAFF", "ADMIN")

@@ -290,7 +290,9 @@ public class OrderService {
         Discount applied = null;
         BigDecimal discountAmount = BigDecimal.ZERO;
         if (request.discountCode() != null && !request.discountCode().isBlank()) {
-            applied = discounts.lockApplicable(request.discountCode(), subtotal);
+            // user == null là đơn staff tạo cho khách vãng lai: không có "khách" nào để giới hạn.
+            applied = discounts.lockApplicable(
+                    request.discountCode(), subtotal, user == null ? null : user.getId());
             discountAmount = applied.amount(subtotal);
         }
         BigDecimal tax = subtotal.subtract(discountAmount).multiply(settings.taxRate()).setScale(2, RoundingMode.HALF_UP);

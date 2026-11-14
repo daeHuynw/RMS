@@ -71,7 +71,7 @@ class OrderServiceCancelTest {
                 mock(TableSessionRepository.class),
                 mock(ReservationRepository.class),
                 mock(UserRepository.class),
-                new DiscountService(discountRepository, mock(AuditService.class)),
+                new DiscountService(discountRepository, orderDiscounts, mock(AuditService.class)),
                 orderDiscounts,
                 mock(SettingsService.class),
                 mock(NotificationService.class),

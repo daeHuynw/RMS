@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,7 +63,14 @@ public class AdminUserService {
                 passwords.encode(request.password()),
                 blankToNull(request.phone()));
         user.getRoles().addAll(assigned);
-        User saved = users.save(user);
+        User saved;
+        try {
+            // Flush ngay để ràng buộc UNIQUE(email) nổ ở đây: hai admin tạo cùng email cùng lúc
+            // đều qua được existsByEmailIgnoreCase, người chậm hơn phải nhận đúng EMAIL_EXISTS.
+            saved = users.saveAndFlush(user);
+        } catch (DataIntegrityViolationException ex) {
+            throw ApiException.conflict("EMAIL_EXISTS", "Email already registered");
+        }
         audit.record("USER_CREATED", "USER", String.valueOf(saved.getId()), saved.getEmail());
         return view(saved);
     }

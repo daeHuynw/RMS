@@ -7,6 +7,7 @@ import com.rms.modules.discount.dto.DiscountDtos.Request;
 import com.rms.modules.discount.dto.DiscountDtos.Response;
 import com.rms.modules.discount.entity.Discount;
 import com.rms.modules.discount.repository.DiscountRepository;
+import com.rms.modules.discount.repository.OrderDiscountRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -18,10 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class DiscountService {
 
     private final DiscountRepository discounts;
+    private final OrderDiscountRepository orderDiscounts;
     private final AuditService audit;
 
-    public DiscountService(DiscountRepository discounts, AuditService audit) {
+    public DiscountService(
+            DiscountRepository discounts, OrderDiscountRepository orderDiscounts, AuditService audit) {
         this.discounts = discounts;
+        this.orderDiscounts = orderDiscounts;
         this.audit = audit;
     }
 
@@ -109,13 +113,18 @@ public class DiscountService {
     }
 
     @Transactional
-    public Discount lockApplicable(String code, BigDecimal subtotal) {
+    public Discount lockApplicable(String code, BigDecimal subtotal, Long customerId) {
         Discount discount = discounts.lockByCode(normalize(code))
                 .orElseThrow(() -> ApiException.badRequest("INVALID_DISCOUNT", "Discount code is invalid"));
         if (!discount.canApply(Instant.now(), subtotal)) {
             throw ApiException.badRequest(
                     "INVALID_DISCOUNT",
                     "Discount code is inactive, expired, exhausted, or order minimum is not met");
+        }
+        // Mỗi tài khoản khách dùng mỗi mã một lần (đơn đã huỷ không tính). customerId == null là đơn
+        // staff tạo cho khách vãng lai. Dòng mã đã bị khoá ở trên nên hai đơn cùng lúc phải chờ nhau.
+        if (customerId != null && orderDiscounts.existsActiveUseByCustomer(discount.getId(), customerId)) {
+            throw ApiException.conflict("DISCOUNT_ALREADY_USED", "You have already used this discount code");
         }
         return discount;
     }
