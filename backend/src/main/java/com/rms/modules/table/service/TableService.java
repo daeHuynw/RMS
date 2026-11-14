@@ -1,6 +1,8 @@
 package com.rms.modules.table.service;
 
 import com.rms.exception.ApiException;
+import com.rms.modules.order.entity.OrderStatus;
+import com.rms.modules.order.repository.OrderRepository;
 import com.rms.modules.reservation.entity.ReservationStatus;
 import com.rms.modules.reservation.repository.ReservationRepository;
 import com.rms.modules.table.dto.TableDtos.QrTokenResponse;
@@ -23,23 +25,30 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class TableService {
 
+    /** Đơn đã kết thúc: đã thu tiền hoặc đã huỷ. Mọi trạng thái khác nghĩa là phiên còn việc dở. */
+    private static final List<OrderStatus> FINISHED_ORDER_STATUSES =
+            List.of(OrderStatus.COMPLETED, OrderStatus.CANCELLED);
+
     private final DiningTableRepository tables;
     private final TableSessionRepository sessions;
     private final UserRepository users;
     private final QrTokenService qrTokens;
     private final ReservationRepository reservations;
+    private final OrderRepository orders;
 
     public TableService(
             DiningTableRepository tables,
             TableSessionRepository sessions,
             UserRepository users,
             QrTokenService qrTokens,
-            ReservationRepository reservations) {
+            ReservationRepository reservations,
+            OrderRepository orders) {
         this.tables = tables;
         this.sessions = sessions;
         this.users = users;
         this.qrTokens = qrTokens;
         this.reservations = reservations;
+        this.orders = orders;
     }
 
     @Transactional(readOnly = true)
@@ -134,6 +143,12 @@ public class TableService {
                 .orElseThrow(() -> ApiException.notFound("Session not found"));
         if (session.getStatus() != TableSession.Status.OPEN) {
             throw ApiException.conflict("SESSION_NOT_OPEN", "Session is already closed");
+        }
+        // Còn đơn chưa thu tiền / chưa huỷ thì chưa được trả bàn (REVIEW B4). Kiểm SAU khi khoá phiên:
+        // tạo đơn cũng khoá dòng phiên, nên không có đơn mới chen vào giữa lúc kiểm và lúc đóng.
+        if (orders.existsByTableSession_IdAndStatusNotIn(session.getId(), FINISHED_ORDER_STATUSES)) {
+            throw ApiException.conflict(
+                    "SESSION_HAS_OPEN_ORDERS", "Settle or cancel every order before closing the session");
         }
         DiningTable table = tables.lockById(session.getTable().getId())
                 .orElseThrow(() -> ApiException.notFound("Table not found"));
