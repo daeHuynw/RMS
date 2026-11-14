@@ -93,13 +93,24 @@ export async function api(path, options = {}) {
   }
   const data = await response.json().catch(() => null)
   if (!response.ok) {
-    const error = new Error(data?.message || 'Request failed')
+    const error = new Error(errorMessage(data))
     error.status = response.status
     error.code = data?.code
     error.path = data?.path
+    error.errors = data?.errors || null
     throw error
   }
   return data
+}
+
+// ApiError.errors (lỗi từng ô) được nối vào câu báo lỗi, để mọi trang đang hiện err.message
+// đều thấy ô nào sai mà không phải sửa từng trang. Trang nào cần tô từng ô thì đọc err.errors.
+function errorMessage(data) {
+  const base = data?.message || 'Request failed'
+  if (!Array.isArray(data?.errors) || !data.errors.length) {
+    return base
+  }
+  return `${base}: ${data.errors.map((e) => `${e.field} ${e.message}`).join('; ')}`
 }
 
 /** Download binary (PDF…) with same auth/refresh as api(). */
