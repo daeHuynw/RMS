@@ -35,6 +35,11 @@ spring:
 rms:
   # Múi giờ nhà hàng: dashboard cắt ngày và tính giờ cao điểm theo vùng này (DB vẫn lưu UTC).
   time-zone: ${RMS_TIME_ZONE:Asia/Ho_Chi_Minh}
+  reservation:
+    # Lượt đặt CONFIRMED quá giờ bắt đầu bao nhiêu phút mà chưa check-in thì tự chuyển NO_SHOW.
+    no-show-grace-minutes: ${RMS_NO_SHOW_GRACE_MINUTES:30}
+    # Chu kỳ quét lượt đặt quá hạn (PENDING quá giờ → CANCELLED, CONFIRMED vắng mặt → NO_SHOW).
+    sweep-interval-ms: 60000
   security:
     jwt-secret: ${RMS_JWT_SECRET:}
     access-token-minutes: 30

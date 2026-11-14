@@ -70,7 +70,7 @@ class ReservationAvailabilityTest {
         customer = withId(new User("Khách A", "a@example.com", "hash", null), CUSTOMER_ID);
 
         when(settings.reservationDurationMinutes()).thenReturn(DURATION_MINUTES);
-        when(users.findWithRolesById(CUSTOMER_ID)).thenReturn(Optional.of(customer));
+        when(users.lockById(CUSTOMER_ID)).thenReturn(Optional.of(customer));
         when(tables.lockById(TABLE_ID)).thenReturn(Optional.of(table));
         when(tables.findAllByOrderByTableCodeAsc()).thenReturn(List.of(table));
         when(reservations.save(any())).thenAnswer(call -> withId(call.getArgument(0), RESERVATION_ID));
