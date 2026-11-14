@@ -102,6 +102,12 @@ public class DiscountService {
         return new Quote(discount.getCode(), discount.amount(subtotal));
     }
 
+    /** Đơn dùng mã bị huỷ: trả lại lượt. Khoá dòng mã như lúc consume để không mất cập nhật. */
+    @Transactional
+    public void release(Long discountId) {
+        discounts.lockById(discountId).ifPresent(Discount::release);
+    }
+
     @Transactional
     public Discount lockApplicable(String code, BigDecimal subtotal) {
         Discount discount = discounts.lockByCode(normalize(code))

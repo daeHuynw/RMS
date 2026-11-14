@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.rms.exception.ApiException;
+import com.rms.modules.audit.service.AuditService;
 import com.rms.modules.discount.repository.OrderDiscountRepository;
 import com.rms.modules.discount.service.DiscountService;
 import com.rms.modules.menu.repository.MenuItemRepository;
@@ -84,7 +85,8 @@ class ReservationSessionOwnershipTest {
                 mock(OrderDiscountRepository.class),
                 mock(SettingsService.class),
                 mock(NotificationService.class),
-                mock(ApplicationEventPublisher.class));
+                mock(ApplicationEventPublisher.class),
+                mock(AuditService.class));
 
         table = withId(new DiningTable("T03", 4, "Sân vườn"), TABLE_ID);
         User customer = withId(new User("Khách A", "a@example.com", "hash", null), CUSTOMER_ID);

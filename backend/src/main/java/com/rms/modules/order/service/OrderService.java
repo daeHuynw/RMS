@@ -1,6 +1,7 @@
 package com.rms.modules.order.service;
 
 import com.rms.exception.ApiException;
+import com.rms.modules.audit.service.AuditService;
 import com.rms.modules.discount.entity.Discount;
 import com.rms.modules.discount.entity.OrderDiscount;
 import com.rms.modules.discount.repository.OrderDiscountRepository;
@@ -51,6 +52,7 @@ public class OrderService {
     private final SettingsService settings;
     private final NotificationService notifications;
     private final ApplicationEventPublisher events;
+    private final AuditService audit;
 
     public OrderService(
             OrderRepository orders,
@@ -62,7 +64,8 @@ public class OrderService {
             OrderDiscountRepository orderDiscounts,
             SettingsService settings,
             NotificationService notifications,
-            ApplicationEventPublisher events) {
+            ApplicationEventPublisher events,
+            AuditService audit) {
         this.orders = orders;
         this.menuItems = menuItems;
         this.sessions = sessions;
@@ -73,6 +76,7 @@ public class OrderService {
         this.settings = settings;
         this.notifications = notifications;
         this.events = events;
+        this.audit = audit;
     }
 
     @Transactional(readOnly = true)
@@ -184,7 +188,18 @@ public class OrderService {
         }
         String cancelReason = reason == null || reason.isBlank() ? null : reason.trim();
         order.transition(OrderStatus.CANCELLED, cancelReason);
-        return Response.from(requireWithDetails(order.getId()));
+        // Huỷ đơn phải trả lại mọi thứ đơn đang giữ (REVIEW B7):
+        // 1. món: không còn gì để bếp làm
+        order.getItems().forEach(item -> item.setStatus(OrderItemStatus.CANCELLED));
+        // 2. lượt dùng mã giảm giá (giữ dòng order_discounts làm lịch sử)
+        orderDiscounts.findByOrder_Id(order.getId())
+                .forEach(link -> discounts.release(link.getDiscount().getId()));
+        // 3. dấu vết: ai huỷ, vì sao
+        audit.record("ORDER_CANCELLED", "ORDER", String.valueOf(order.getId()), cancelReason);
+        Order detailed = requireWithDetails(order.getId());
+        // 4. bếp: ticket của đơn CONFIRMED phải biến mất khỏi màn bếp
+        publishKitchen("ORDER_CANCELLED", detailed);
+        return Response.from(detailed);
     }
 
     @Transactional
