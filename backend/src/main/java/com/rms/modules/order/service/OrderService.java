@@ -136,12 +136,17 @@ public class OrderService {
     @Transactional
     public Response transition(Long id, OrderStatus next) {
         Order order = orders.lockById(id).orElseThrow(() -> ApiException.notFound("Order not found"));
+        // COMPLETED = đã thu tiền. Chỉ PaymentService.record (order.settle()) được đưa đơn tới đó,
+        // nếu không đơn sẽ "hoàn tất" mà không có payment, không có hoá đơn, không tính doanh thu.
+        if (next == OrderStatus.COMPLETED) {
+            throw ApiException.conflict(
+                    "PAYMENT_REQUIRED", "Record a payment to complete the order");
+        }
         boolean valid = switch (next) {
             case CONFIRMED -> order.getStatus() == OrderStatus.PENDING;
             case IN_PROGRESS -> order.getStatus() == OrderStatus.CONFIRMED;
             case READY -> order.getStatus() == OrderStatus.IN_PROGRESS;
             case SERVED -> order.getStatus() == OrderStatus.READY;
-            case COMPLETED -> order.getStatus() == OrderStatus.SERVED;
             default -> false;
         };
         if (!valid) {
