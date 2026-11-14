@@ -12,11 +12,16 @@ const form = document.querySelector('#create-form')
 const sessionSelect = document.querySelector('#sessionId')
 const menuSelect = document.querySelector('#menuItemId')
 
+// Staff chỉ bấm hai bước: xác nhận đơn và mang ra. IN_PROGRESS / READY do bếp quyết định
+// (bếp bắt đầu món đầu tiên → IN_PROGRESS, mọi món xong → READY); backend từ chối nếu gửi tay.
 const NEXT = {
   PENDING: 'CONFIRMED',
-  CONFIRMED: 'IN_PROGRESS',
-  IN_PROGRESS: 'READY',
   READY: 'SERVED',
+}
+
+const WAITING_FOR_KITCHEN = {
+  CONFIRMED: 'Đã gửi bếp — chờ bếp bắt đầu',
+  IN_PROGRESS: 'Bếp đang làm — đơn tự sang READY khi mọi món xong',
 }
 
 function flash(message, isError) {
@@ -96,6 +101,7 @@ async function loadOrders() {
       <ul class="order-lines">${lines}</ul>
       <div class="admin-actions">
         ${next ? `<button type="button" data-status="${order.id}" data-next="${next}">→ ${next}</button>` : ''}
+        ${WAITING_FOR_KITCHEN[order.status] ? `<span class="muted">${WAITING_FOR_KITCHEN[order.status]}</span>` : ''}
         ${canPay ? `<button type="button" data-pay="${order.id}" data-amount="${order.totalAmount}">Thanh toán tiền mặt</button>` : ''}
         ${canInvoice ? `<button type="button" class="btn-secondary" data-invoice="${order.id}">Hóa đơn PDF</button>` : ''}
         ${canCancel ? `<button type="button" class="btn-danger" data-cancel="${order.id}">Hủy</button>` : ''}

@@ -144,10 +144,14 @@ public class OrderService {
             throw ApiException.conflict(
                     "PAYMENT_REQUIRED", "Record a payment to complete the order");
         }
+        // IN_PROGRESS / READY đi theo món (REVIEW B6): bếp bắt đầu món đầu tiên → IN_PROGRESS,
+        // mọi món READY → READY (KitchenService.updateItemStatus). Staff chỉ xác nhận và phục vụ.
+        if (next == OrderStatus.IN_PROGRESS || next == OrderStatus.READY) {
+            throw ApiException.conflict(
+                    "KITCHEN_DRIVEN_STATUS", "IN_PROGRESS and READY are set by the kitchen as items are prepared");
+        }
         boolean valid = switch (next) {
             case CONFIRMED -> order.getStatus() == OrderStatus.PENDING;
-            case IN_PROGRESS -> order.getStatus() == OrderStatus.CONFIRMED;
-            case READY -> order.getStatus() == OrderStatus.IN_PROGRESS;
             case SERVED -> order.getStatus() == OrderStatus.READY;
             default -> false;
         };
@@ -156,8 +160,20 @@ public class OrderService {
                     "INVALID_ORDER_TRANSITION",
                     "Cannot move from " + order.getStatus() + " to " + next);
         }
+        if (next == OrderStatus.SERVED && hasUnreadyItem(order)) {
+            throw ApiException.conflict("ITEMS_NOT_READY", "Every item must be READY before the order is served");
+        }
         order.transition(next, null);
-        return Response.from(requireWithDetails(order.getId()));
+        Order detailed = requireWithDetails(order.getId());
+        // Bếp chỉ thấy đơn CONFIRMED / IN_PROGRESS / READY: xác nhận làm ticket hiện ra, phục vụ làm nó biến mất.
+        publishKitchen("ORDER_STATUS_CHANGED", detailed);
+        return Response.from(detailed);
+    }
+
+    private static boolean hasUnreadyItem(Order order) {
+        return order.getItems().stream()
+                .anyMatch(item -> item.getStatus() != OrderItemStatus.READY
+                        && item.getStatus() != OrderItemStatus.CANCELLED);
     }
 
     @Transactional
@@ -193,7 +209,9 @@ public class OrderService {
         }
         item.change(change.quantity(), blankToNull(change.note()));
         reprice(order);
-        return Response.from(requireWithDetails(order.getId()));
+        Order detailed = requireWithDetails(order.getId());
+        publishKitchen("ITEM_CHANGED", detailed);
+        return Response.from(detailed);
     }
 
     @Transactional
@@ -210,7 +228,9 @@ public class OrderService {
         }
         order.getItems().remove(item);
         reprice(order);
-        return Response.from(requireWithDetails(order.getId()));
+        Order detailed = requireWithDetails(order.getId());
+        publishKitchen("ITEM_REMOVED", detailed);
+        return Response.from(detailed);
     }
 
     private Response create(
