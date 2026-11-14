@@ -172,6 +172,9 @@ public class AuthService {
             throw ApiException.badRequest("VALIDATION_ERROR", "Password must be 8–72 UTF-8 bytes");
         }
         user.changePassword(passwords.encode(request.newPassword()));
+        // Đổi mật khẩu = mật khẩu cũ có thể đã lộ: thu hồi MỌI phiên đăng nhập của tài khoản,
+        // kể cả phiên đang dùng (REVIEW B9). Thiết bị nào cũng phải đăng nhập lại bằng mật khẩu mới.
+        refreshTokens.findByUser_IdAndRevokedAtIsNull(userId).forEach(RefreshToken::revoke);
     }
 
     private static String blankToNull(String value) {
