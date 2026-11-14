@@ -46,6 +46,7 @@ public class MenuService {
                 .toList();
 
         List<MenuItemResponse> items = menuItems.findByStatusOrderByNameAsc(MenuStatus.AVAILABLE).stream()
+                .filter(MenuService::inActiveCategory)
                 .map(this::toItem)
                 .toList();
 
@@ -55,8 +56,17 @@ public class MenuService {
     @Transactional(readOnly = true)
     public List<MenuItemResponse> byCategory(Long categoryId) {
         return menuItems.findByCategoryIdAndStatusOrderByNameAsc(categoryId, MenuStatus.AVAILABLE).stream()
+                .filter(MenuService::inActiveCategory)
                 .map(this::toItem)
                 .toList();
+    }
+
+    /**
+     * Thực đơn công khai chỉ hiện món khách gọi được: món AVAILABLE VÀ danh mục đang bật —
+     * cùng điều kiện với OrderService.requireAvailableMenuItem (REVIEW B8).
+     */
+    private static boolean inActiveCategory(MenuItem item) {
+        return item.getCategory().isActive();
     }
 
     private CategoryResponse toCategory(Category c) {
