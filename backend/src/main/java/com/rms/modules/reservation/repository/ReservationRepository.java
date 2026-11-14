@@ -6,6 +6,7 @@ import jakarta.persistence.LockModeType;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -74,7 +75,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByUserIdOrderByReservationStartDesc(Long userId);
 
-    List<Reservation> findAllByOrderByReservationStartDesc();
+    /** Có giới hạn số dòng (Pageable) — danh sách của staff không nạp cả bảng (REVIEW C1). */
+    List<Reservation> findAllByOrderByReservationStartDesc(Pageable pageable);
 
     Optional<Reservation> findFirstByUser_IdAndStatusOrderByReservationStartDesc(
             Long userId, ReservationStatus status);

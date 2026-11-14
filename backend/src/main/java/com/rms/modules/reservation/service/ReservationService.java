@@ -19,11 +19,15 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ReservationService {
+
+    /** Số lượt đặt tối đa trả về cho danh sách của staff. */
+    private static final int STAFF_LIST_LIMIT = 200;
 
     private static final List<ReservationStatus> BLOCKING = List.of(
             ReservationStatus.PENDING,
@@ -115,7 +119,8 @@ public class ReservationService {
 
     @Transactional(readOnly = true)
     public List<Response> listAll() {
-        return reservations.findAllByOrderByReservationStartDesc().stream()
+        // Tối đa STAFF_LIST_LIMIT lượt đặt, giờ bắt đầu muộn nhất trước (REVIEW C1).
+        return reservations.findAllByOrderByReservationStartDesc(PageRequest.of(0, STAFF_LIST_LIMIT)).stream()
                 .map(Response::from)
                 .toList();
     }

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.rms.exception.ApiException;
@@ -17,10 +18,12 @@ import com.rms.modules.order.entity.OrderStatus;
 import com.rms.modules.order.repository.OrderRepository;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -112,20 +115,32 @@ class KitchenServiceTest {
 
     // ---- Hàng đợi bếp ----
 
+    /** REVIEW C1: bếp hỏi CSDL đúng các trạng thái nó làm việc, không nạp cả bảng đơn rồi tự lọc. */
     @Test
-    void queueShowsOnlyOrdersTheKitchenCanWorkOn() {
-        Order pending = order(OrderStatus.PENDING, OrderItemStatus.PENDING);
+    void queueAsksTheDatabaseOnlyForOrdersInTheKitchen() {
         Order confirmed = order(OrderStatus.CONFIRMED, OrderItemStatus.PENDING);
         Order cooking = order(OrderStatus.IN_PROGRESS, OrderItemStatus.PREPARING);
         Order ready = order(OrderStatus.READY, OrderItemStatus.READY);
-        Order served = order(OrderStatus.SERVED, OrderItemStatus.READY);
-        Order cancelled = order(OrderStatus.CANCELLED, OrderItemStatus.PENDING);
-        when(orders.findAllByOrderByCreatedAtDesc())
-                .thenReturn(List.of(pending, confirmed, cooking, ready, served, cancelled));
+        when(orders.findWithDetailsByStatusIn(any())).thenReturn(List.of(confirmed, cooking, ready));
 
         assertThat(service.queue())
                 .extracting(Ticket::id)
                 .containsExactly(confirmed.getId(), cooking.getId(), ready.getId());
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Collection<OrderStatus>> asked = ArgumentCaptor.forClass(Collection.class);
+        verify(orders).findWithDetailsByStatusIn(asked.capture());
+        assertThat(asked.getValue())
+                .containsExactlyInAnyOrder(OrderStatus.CONFIRMED, OrderStatus.IN_PROGRESS, OrderStatus.READY);
+    }
+
+    @Test
+    void queueSkipsAnOrderWhoseItemsWereAllCancelled() {
+        Order nothingToCook = order(OrderStatus.CONFIRMED, OrderItemStatus.CANCELLED);
+        Order confirmed = order(OrderStatus.CONFIRMED, OrderItemStatus.PENDING);
+        when(orders.findWithDetailsByStatusIn(any())).thenReturn(List.of(nothingToCook, confirmed));
+
+        assertThat(service.queue()).extracting(Ticket::id).containsExactly(confirmed.getId());
     }
 
     /** Đơn có sẵn trạng thái và các món theo thứ tự; entityManager/repository trả đúng đơn và món đó. */
