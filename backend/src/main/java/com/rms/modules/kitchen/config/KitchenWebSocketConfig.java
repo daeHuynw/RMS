@@ -10,6 +10,7 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -45,7 +46,12 @@ public class KitchenWebSocketConfig implements WebSocketMessageBrokerConfigurer 
         registration.interceptors(new ChannelInterceptor() {
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+                // Phải lấy accessor GỐC của message: Spring gắn callback "nhớ user theo phiên" vào đó.
+                // StompHeaderAccessor.wrap() tạo accessor mới nên setUser() không tới được phiên.
+                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+                if (accessor == null) {
+                    return message;
+                }
                 if (accessor.getCommand() == StompCommand.CONNECT) {
                     String authorization = accessor.getFirstNativeHeader("Authorization");
                     if (authorization == null || !authorization.startsWith("Bearer ")) {
