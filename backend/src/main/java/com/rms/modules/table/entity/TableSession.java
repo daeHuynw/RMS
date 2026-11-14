@@ -35,6 +35,10 @@ public class TableSession {
     @JoinColumn(name = "opened_by")
     private User openedBy;
 
+    /** Lượt đặt mà phiên này phục vụ; null = khách vãng lai. Lưu id (như Payment.orderId), không map entity. */
+    @Column(name = "reservation_id")
+    private Long reservationId;
+
     @Column(nullable = false)
     private Instant openedAt;
 
@@ -50,10 +54,17 @@ public class TableSession {
     protected TableSession() {
     }
 
+    /** Phiên khách vãng lai (staff mở tay), không gắn lượt đặt. */
     public TableSession(DiningTable table, User openedBy, Instant openedAt) {
+        this(table, openedBy, openedAt, null);
+    }
+
+    /** Phiên mở lúc check-in cho đúng một lượt đặt. */
+    public TableSession(DiningTable table, User openedBy, Instant openedAt, Long reservationId) {
         this.table = table;
         this.openedBy = openedBy;
         this.openedAt = openedAt;
+        this.reservationId = reservationId;
     }
 
     public void close(Instant at) {
@@ -71,6 +82,10 @@ public class TableSession {
 
     public User getOpenedBy() {
         return openedBy;
+    }
+
+    public Long getReservationId() {
+        return reservationId;
     }
 
     public Instant getOpenedAt() {

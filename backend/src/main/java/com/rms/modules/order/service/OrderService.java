@@ -80,11 +80,13 @@ public class OrderService {
         Reservation reservation = reservations
                 .findFirstByUser_IdAndStatusOrderByReservationStartDesc(userId, ReservationStatus.CHECKED_IN)
                 .orElseThrow(() -> ApiException.notFound("No checked-in reservation — wait for staff check-in"));
+        // Phiên của CHÍNH lượt đặt này — không phải "phiên đang mở của bàn", vì bàn có thể đã
+        // chuyển sang nhóm khác (REVIEW B3).
         TableSession session = sessions
-                .findByTableIdAndStatus(reservation.getTable().getId(), TableSession.Status.OPEN)
+                .findByReservationIdAndStatus(reservation.getId(), TableSession.Status.OPEN)
                 .orElseThrow(() -> ApiException.conflict(
                         "SESSION_NOT_OPEN",
-                        "Table session is not open yet"));
+                        "Table session for this reservation is not open"));
         return new OrderContext(
                 reservation.getId(),
                 reservation.getTable().getId(),

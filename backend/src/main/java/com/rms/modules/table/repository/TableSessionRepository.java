@@ -15,6 +15,9 @@ public interface TableSessionRepository extends JpaRepository<TableSession, Long
 
     Optional<TableSession> findByTableIdAndStatus(Long tableId, TableSession.Status status);
 
+    /** Phiên của đúng một lượt đặt (không phải "phiên đang mở của bàn"). */
+    Optional<TableSession> findByReservationIdAndStatus(Long reservationId, TableSession.Status status);
+
     List<TableSession> findByStatusOrderByOpenedAtDesc(TableSession.Status status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

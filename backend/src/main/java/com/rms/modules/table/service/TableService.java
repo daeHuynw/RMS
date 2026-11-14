@@ -1,6 +1,8 @@
 package com.rms.modules.table.service;
 
 import com.rms.exception.ApiException;
+import com.rms.modules.reservation.entity.ReservationStatus;
+import com.rms.modules.reservation.repository.ReservationRepository;
 import com.rms.modules.table.dto.TableDtos.QrTokenResponse;
 import com.rms.modules.table.dto.TableDtos.SessionResponse;
 import com.rms.modules.table.dto.TableDtos.TableRequest;
@@ -25,16 +27,19 @@ public class TableService {
     private final TableSessionRepository sessions;
     private final UserRepository users;
     private final QrTokenService qrTokens;
+    private final ReservationRepository reservations;
 
     public TableService(
             DiningTableRepository tables,
             TableSessionRepository sessions,
             UserRepository users,
-            QrTokenService qrTokens) {
+            QrTokenService qrTokens,
+            ReservationRepository reservations) {
         this.tables = tables;
         this.sessions = sessions;
         this.users = users;
         this.qrTokens = qrTokens;
+        this.reservations = reservations;
     }
 
     @Transactional(readOnly = true)
@@ -134,6 +139,13 @@ public class TableService {
                 .orElseThrow(() -> ApiException.notFound("Table not found"));
         session.close(Instant.now());
         table.setStatus(TableStatus.AVAILABLE);
+        // Khách của lượt đặt đã rời bàn: kết thúc luôn lượt đặt, nếu không nó treo ở CHECKED_IN
+        // và khách cũ vẫn còn "ngữ cảnh gọi món".
+        if (session.getReservationId() != null) {
+            reservations.lockById(session.getReservationId())
+                    .filter(reservation -> reservation.getStatus() == ReservationStatus.CHECKED_IN)
+                    .ifPresent(reservation -> reservation.transition(ReservationStatus.COMPLETED));
+        }
         return toSession(session);
     }
 
