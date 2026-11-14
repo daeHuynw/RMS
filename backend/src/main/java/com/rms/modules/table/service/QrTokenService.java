@@ -26,15 +26,6 @@ public class QrTokenService {
         return raw;
     }
 
-    public boolean matches(DiningTable table, String raw) {
-        if (table.getQrTokenHash() == null || raw == null) {
-            return false;
-        }
-        return MessageDigest.isEqual(
-                table.getQrTokenHash().getBytes(StandardCharsets.US_ASCII),
-                hash(raw).getBytes(StandardCharsets.US_ASCII));
-    }
-
     public String requireRaw(DiningTable table) {
         if (table.getQrToken() == null) {
             return null;

@@ -18,8 +18,6 @@ public interface DiningTableRepository extends JpaRepository<DiningTable, Long> 
 
     boolean existsByTableCodeIgnoreCase(String tableCode);
 
-    Optional<DiningTable> findByQrTokenHash(String qrTokenHash);
-
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from DiningTable t where t.id = :id")
     Optional<DiningTable> lockById(@Param("id") Long id);
