@@ -93,8 +93,15 @@ function connectRealtime() {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   const client = new Client({
     brokerURL: `${protocol}//${window.location.host}/ws`,
-    connectHeaders: {
-      Authorization: `Bearer ${accessToken()}`,
+    // Access token chỉ sống 30 phút. Trước MỖI lần (re)connect: gọi api() để nó tự refresh
+    // nếu token đã hết hạn, rồi mới đọc token mới nhất — không chốt cứng header lúc tạo client.
+    beforeConnect: async () => {
+      try {
+        await api('/auth/me')
+      } catch {
+        // Backend chưa lên / mất mạng: vẫn thử bằng token đang có, lần reconnect sau thử lại.
+      }
+      client.connectHeaders = { Authorization: `Bearer ${accessToken()}` }
     },
     reconnectDelay: 3000,
     onConnect: () => {
