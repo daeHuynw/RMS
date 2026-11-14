@@ -65,9 +65,15 @@ public class ReservationService {
     @Transactional
     public Response create(CreateRequest request, Long userId) {
         validateInterval(request.start(), request.end(), request.guestCount());
-        User user = users.findWithRolesById(userId)
+        // Khoá dòng user trước: hai yêu cầu đặt bàn cùng lúc của một khách phải xếp hàng,
+        // nếu không cả hai cùng qua được bước kiểm "đã có lượt đặt chồng giờ chưa" (REVIEW B10).
+        User user = users.lockById(userId)
                 .filter(User::isActive)
                 .orElseThrow(() -> ApiException.unauthorized("Authentication required"));
+        if (reservations.existsOverlapForUser(userId, request.start(), request.end(), BLOCKING)) {
+            throw ApiException.conflict(
+                    "RESERVATION_OVERLAP", "You already have a reservation overlapping this time");
+        }
 
         DiningTable table = tables.lockById(request.tableId())
                 .orElseThrow(() -> ApiException.notFound("Table not found"));
@@ -187,6 +193,23 @@ public class ReservationService {
 
         reservation.transition(next);
         return Response.from(reservation);
+    }
+
+    /**
+     * Dọn lượt đặt đã quá hạn mà không ai xử lý (REVIEW B10) — gọi định kỳ từ ReservationExpiryJob:
+     *   PENDING tới giờ bắt đầu mà chưa được xác nhận            → CANCELLED
+     *   CONFIRMED quá giờ bắt đầu noShowGrace mà chưa check-in   → NO_SHOW
+     * Không đụng trạng thái bàn (bàn chỉ đổi theo phiên, REVIEW B5). Trả về số lượt đặt đã đổi.
+     */
+    @Transactional
+    public int expireStale(Instant now, Duration noShowGrace) {
+        List<Reservation> unanswered = reservations.lockDue(ReservationStatus.PENDING, now);
+        unanswered.forEach(reservation -> reservation.transition(ReservationStatus.CANCELLED));
+
+        List<Reservation> missed = reservations.lockDue(ReservationStatus.CONFIRMED, now.minus(noShowGrace));
+        missed.forEach(reservation -> reservation.transition(ReservationStatus.NO_SHOW));
+
+        return unanswered.size() + missed.size();
     }
 
     private void assertAccess(Reservation reservation, Long userId, boolean staff) {
