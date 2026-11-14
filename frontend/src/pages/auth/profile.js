@@ -1,4 +1,4 @@
-import { api } from '../../api.js'
+import { api, clearTokens } from '../../api.js'
 import { requireRoles } from '../../auth.js'
 import { mountAppNav } from '../../nav.js'
 
@@ -48,7 +48,12 @@ passwordForm.addEventListener('submit', async (event) => {
       }),
     })
     passwordForm.reset()
-    flash('Đã đổi mật khẩu', false)
+    // Backend đã thu hồi mọi phiên (kể cả phiên này): xoá token cũ và về trang đăng nhập.
+    flash('Đã đổi mật khẩu. Vui lòng đăng nhập lại bằng mật khẩu mới…', false)
+    clearTokens()
+    setTimeout(() => {
+      window.location.href = '/'
+    }, 1500)
   } catch (err) {
     flash(err.message || 'Đổi mật khẩu thất bại', true)
   }
