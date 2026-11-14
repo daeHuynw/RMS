@@ -140,6 +140,13 @@ public class Discount {
         usedCount++;
     }
 
+    /** Trả lại một lượt dùng (đơn dùng mã bị huỷ). Không bao giờ xuống dưới 0. */
+    public void release() {
+        if (usedCount > 0) {
+            usedCount--;
+        }
+    }
+
     public Long getId() {
         return id;
     }

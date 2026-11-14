@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.rms.exception.ApiException;
+import com.rms.modules.audit.service.AuditService;
 import com.rms.modules.discount.repository.OrderDiscountRepository;
 import com.rms.modules.discount.service.DiscountService;
 import com.rms.modules.kitchen.service.KitchenTicketChanged;
@@ -61,7 +62,8 @@ class OrderServiceTransitionTest {
                 mock(OrderDiscountRepository.class),
                 mock(SettingsService.class),
                 mock(NotificationService.class),
-                events);
+                events,
+                mock(AuditService.class));
     }
 
     /** REVIEW B2: COMPLETED nghĩa là "đã thu tiền" — chỉ PaymentService.record được đưa đơn tới đó. */
