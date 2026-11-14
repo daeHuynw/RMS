@@ -9,7 +9,11 @@ spring:
       - optional:file:.env[.properties]
       - optional:file:../.env[.properties]
   datasource:
-    url: jdbc:mysql://${RMS_MYSQL_HOST:127.0.0.1}:${RMS_MYSQL_PORT:3306}/${RMS_MYSQL_DATABASE:rms_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    # Mọi cột thời gian lưu UTC. connectionTimeZone=+00:00 (%2B là dấu +): driver coi phiên là UTC;
+    # forceConnectionTimeZoneToSession=true: driver còn SET time_zone của phiên MySQL về +00:00,
+    # nên DEFAULT CURRENT_TIMESTAMP / ON UPDATE do MySQL tự điền cũng là UTC (không theo giờ máy).
+    # Dùng offset chứ không dùng tên "UTC": MySQL chưa nạp bảng múi giờ sẽ từ chối SET time_zone='UTC'.
+    url: jdbc:mysql://${RMS_MYSQL_HOST:127.0.0.1}:${RMS_MYSQL_PORT:3306}/${RMS_MYSQL_DATABASE:rms_db}?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=%2B00:00&forceConnectionTimeZoneToSession=true
     username: ${RMS_MYSQL_USER:rms_learn}
     password: ${RMS_MYSQL_PASSWORD:}
   jpa:
@@ -29,6 +33,8 @@ spring:
       max-request-size: 2MB
 
 rms:
+  # Múi giờ nhà hàng: dashboard cắt ngày và tính giờ cao điểm theo vùng này (DB vẫn lưu UTC).
+  time-zone: ${RMS_TIME_ZONE:Asia/Ho_Chi_Minh}
   security:
     jwt-secret: ${RMS_JWT_SECRET:}
     access-token-minutes: 30

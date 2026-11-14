@@ -58,16 +58,23 @@ public interface DashboardRepository extends Repository<Order, Long> {
             """)
     BigDecimal revenue(@Param("start") Instant start, @Param("end") Instant end);
 
+    /**
+     * paid_at lưu UTC; :offset (vd "+07:00") đổi sang giờ nhà hàng trước khi lấy ngày.
+     * Dùng offset số vì CONVERT_TZ với tên vùng trả NULL khi MySQL chưa nạp bảng múi giờ.
+     */
     @Query(value = """
-            select date(p.paid_at) as day, sum(p.amount) as revenue
+            select date(convert_tz(p.paid_at, '+00:00', :offset)) as day, sum(p.amount) as revenue
             from payments p
             join orders o on o.id = p.order_id
             where p.status = 'SUCCESS' and o.status = 'COMPLETED'
               and p.paid_at >= :start and p.paid_at < :end
-            group by date(p.paid_at)
-            order by date(p.paid_at)
+            group by day
+            order by day
             """, nativeQuery = true)
-    List<RevenueRow> revenueByDay(@Param("start") Instant start, @Param("end") Instant end);
+    List<RevenueRow> revenueByDay(
+            @Param("start") Instant start,
+            @Param("end") Instant end,
+            @Param("offset") String offset);
 
     @Query("""
             select i.itemName as itemName, sum(i.quantity) as quantitySold,
@@ -91,12 +98,16 @@ public interface DashboardRepository extends Repository<Order, Long> {
             """, nativeQuery = true)
     List<StatusRow> ordersByStatus(@Param("start") Instant start, @Param("end") Instant end);
 
+    /** created_at lưu UTC; giờ cao điểm tính theo giờ nhà hàng qua :offset. */
     @Query(value = """
-            select hour(created_at) as hour, count(*) as total
+            select hour(convert_tz(created_at, '+00:00', :offset)) as hour, count(*) as total
             from orders
             where created_at >= :start and created_at < :end
-            group by hour(created_at)
-            order by hour(created_at)
+            group by hour
+            order by hour
             """, nativeQuery = true)
-    List<HourRow> peakHours(@Param("start") Instant start, @Param("end") Instant end);
+    List<HourRow> peakHours(
+            @Param("start") Instant start,
+            @Param("end") Instant end,
+            @Param("offset") String offset);
 }
