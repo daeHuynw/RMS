@@ -1,6 +1,7 @@
 package com.rms.modules.menu.service;
 
 import com.rms.exception.ApiException;
+import com.rms.modules.audit.service.AuditService;
 import com.rms.modules.category.entity.Category;
 import com.rms.modules.category.repository.CategoryRepository;
 import com.rms.modules.menu.dto.MenuDtos.CategoryRequest;
@@ -12,6 +13,8 @@ import com.rms.modules.menu.entity.MenuItem;
 import com.rms.modules.menu.entity.MenuStatus;
 import com.rms.modules.menu.repository.MenuItemRepository;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -32,11 +35,13 @@ public class MenuService {
 
     private final CategoryRepository categories;
     private final MenuItemRepository menuItems;
+    private final AuditService audit;
     private String menuDirectory = "uploads/menu";
 
-    public MenuService(CategoryRepository categories, MenuItemRepository menuItems) {
+    public MenuService(CategoryRepository categories, MenuItemRepository menuItems, AuditService audit) {
         this.categories = categories;
         this.menuItems = menuItems;
+        this.audit = audit;
     }
 
     @Value("${rms.storage.menu-dir:uploads/menu}")
@@ -97,6 +102,7 @@ public CategoryResponse createCategory(CategoryRequest req) {
         throw ApiException.conflict("CATEGORY_EXISTS", "Category name already exists");
     }
     Category saved = categories.save(new Category(name, trimToNull(req.description())));
+    audit.record("CATEGORY_CREATED", "CATEGORY", String.valueOf(saved.getId()), saved.getName());
     return toCategory(saved);
 }
 @Transactional
@@ -110,6 +116,7 @@ public CategoryResponse updateCategory(Long id, CategoryRequest req) {
                 throw ApiException.conflict("CATEGORY_EXISTS", "Category name already exists");
             });
     cat.update(name, trimToNull(req.description()));
+    audit.record("CATEGORY_UPDATED", "CATEGORY", String.valueOf(cat.getId()), cat.getName());
     return toCategory(cat);
 }
 @Transactional
@@ -117,6 +124,7 @@ public CategoryResponse setCategoryActive(Long id, boolean active) {
     Category cat = categories.findById(id)
             .orElseThrow(() -> ApiException.notFound("Category not found"));
     cat.setActive(active);
+    audit.record(active ? "CATEGORY_ENABLED" : "CATEGORY_DISABLED", "CATEGORY", String.valueOf(cat.getId()), cat.getName());
     return toCategory(cat);
 }
 @Transactional(readOnly = true)
@@ -139,7 +147,10 @@ public MenuItemResponse createItem(MenuItemRequest req) {
     if (req.status() != null && !req.status().isBlank()) {
         item.setStatus(parseStatus(req.status()));
     }
-    return toItem(menuItems.save(item));
+    MenuItem saved = menuItems.save(item);
+    audit.record("MENU_ITEM_CREATED", "MENU_ITEM", String.valueOf(saved.getId()),
+            saved.getName() + " · giá " + money(saved.getPrice()));
+    return toItem(saved);
 }
 @Transactional
 public MenuItemResponse updateItem(Long id, MenuItemRequest req) {
@@ -147,17 +158,26 @@ public MenuItemResponse updateItem(Long id, MenuItemRequest req) {
             .orElseThrow(() -> ApiException.notFound("Menu item not found"));
     Category cat = categories.findById(req.categoryId())
             .orElseThrow(() -> ApiException.notFound("Category not found"));
+    BigDecimal oldPrice = item.getPrice();
     item.update(cat, req.name().trim(), trimToNull(req.description()), req.price(), trimToNull(req.imageUrl()));
     if (req.status() != null && !req.status().isBlank()) {
         item.setStatus(parseStatus(req.status()));
     }
+    // Đổi giá là thứ cần truy vết nhất: ghi rõ giá cũ → giá mới (REVIEW C4).
+    String detail = oldPrice.compareTo(item.getPrice()) == 0
+            ? item.getName()
+            : item.getName() + " · giá " + money(oldPrice) + " → " + money(item.getPrice());
+    audit.record("MENU_ITEM_UPDATED", "MENU_ITEM", String.valueOf(item.getId()), detail);
     return toItem(item);
 }
 @Transactional
 public MenuItemResponse setItemStatus(Long id, String status) {
     MenuItem item = menuItems.findById(id)
             .orElseThrow(() -> ApiException.notFound("Menu item not found"));
+    MenuStatus previous = item.getStatus();
     item.setStatus(parseStatus(status));
+    audit.record("MENU_ITEM_STATUS_CHANGED", "MENU_ITEM", String.valueOf(item.getId()),
+            item.getName() + ": " + previous + " → " + item.getStatus());
     return toItem(item);
 }
 @Transactional(readOnly = true)
@@ -166,6 +186,10 @@ public List<MenuItemResponse> listAllItems() {
             .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
             .map(this::toItem)
             .toList();
+}
+/** Giá trong audit luôn 2 chữ số thập phân như cột DECIMAL(12,2), không theo cách client gõ (22000 / 22000.0). */
+private static String money(BigDecimal value) {
+    return value.setScale(2, RoundingMode.HALF_UP).toPlainString();
 }
 private MenuStatus parseStatus(String raw) {
     try {

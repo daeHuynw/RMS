@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.rms.modules.audit.service.AuditService;
 import com.rms.modules.category.entity.Category;
 import com.rms.modules.category.repository.CategoryRepository;
 import com.rms.modules.menu.dto.MenuDtos.CategoryResponse;
@@ -40,7 +41,7 @@ class MenuServiceTest {
     void setUp() {
         categories = mock(CategoryRepository.class);
         menuItems = mock(MenuItemRepository.class);
-        service = new MenuService(categories, menuItems);
+        service = new MenuService(categories, menuItems, mock(AuditService.class));
 
         food = withId(new Category("Món chính", null), FOOD_ID);
         drinks = withId(new Category("Đồ uống", null), DRINKS_ID);

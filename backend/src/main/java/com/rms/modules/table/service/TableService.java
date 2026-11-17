@@ -1,6 +1,7 @@
 package com.rms.modules.table.service;
 
 import com.rms.exception.ApiException;
+import com.rms.modules.audit.service.AuditService;
 import com.rms.modules.order.entity.OrderStatus;
 import com.rms.modules.order.repository.OrderRepository;
 import com.rms.modules.reservation.entity.ReservationStatus;
@@ -35,6 +36,7 @@ public class TableService {
     private final QrTokenService qrTokens;
     private final ReservationRepository reservations;
     private final OrderRepository orders;
+    private final AuditService audit;
 
     public TableService(
             DiningTableRepository tables,
@@ -42,13 +44,15 @@ public class TableService {
             UserRepository users,
             QrTokenService qrTokens,
             ReservationRepository reservations,
-            OrderRepository orders) {
+            OrderRepository orders,
+            AuditService audit) {
         this.tables = tables;
         this.sessions = sessions;
         this.users = users;
         this.qrTokens = qrTokens;
         this.reservations = reservations;
         this.orders = orders;
+        this.audit = audit;
     }
 
     @Transactional(readOnly = true)
@@ -70,7 +74,9 @@ public class TableService {
         DiningTable table = new DiningTable(code, request.capacity(), trimToNull(request.area()));
         qrTokens.rotate(table);
         try {
-            return toTable(tables.saveAndFlush(table));
+            DiningTable saved = tables.saveAndFlush(table);
+            audit.record("TABLE_CREATED", "TABLE", String.valueOf(saved.getId()), saved.getTableCode());
+            return toTable(saved);
         } catch (DataIntegrityViolationException ex) {
             throw ApiException.conflict("TABLE_CODE_EXISTS", "Table code already exists");
         }
@@ -87,6 +93,8 @@ public class TableService {
                     throw ApiException.conflict("TABLE_CODE_EXISTS", "Table code already exists");
                 });
         table.update(code, request.capacity(), trimToNull(request.area()));
+        audit.record("TABLE_UPDATED", "TABLE", String.valueOf(table.getId()),
+                table.getTableCode() + " · " + table.getCapacity() + " chỗ");
         return toTable(table);
     }
 
@@ -115,6 +123,8 @@ public class TableService {
             throw ApiException.badRequest("INVALID_TABLE_STATUS_TRANSITION", "Invalid table status transition");
         }
         table.setStatus(status);
+        audit.record("TABLE_STATUS_CHANGED", "TABLE", String.valueOf(table.getId()),
+                table.getTableCode() + ": " + current + " → " + status);
         return toTable(table);
     }
 
@@ -131,6 +141,7 @@ public class TableService {
         try {
             TableSession session = sessions.saveAndFlush(new TableSession(table, staff, Instant.now()));
             table.setStatus(TableStatus.OCCUPIED);
+            audit.record("SESSION_OPENED", "TABLE_SESSION", String.valueOf(session.getId()), table.getTableCode());
             return toSession(session);
         } catch (DataIntegrityViolationException ex) {
             throw ApiException.conflict("SESSION_ALREADY_OPEN", "Table already has an open session");
@@ -161,6 +172,7 @@ public class TableService {
                     .filter(reservation -> reservation.getStatus() == ReservationStatus.CHECKED_IN)
                     .ifPresent(reservation -> reservation.transition(ReservationStatus.COMPLETED));
         }
+        audit.record("SESSION_CLOSED", "TABLE_SESSION", String.valueOf(session.getId()), table.getTableCode());
         return toSession(session);
     }
 
@@ -175,6 +187,8 @@ public class TableService {
     public QrTokenResponse rotateQr(Long tableId) {
         DiningTable table = tables.lockById(tableId).orElseThrow(() -> ApiException.notFound("Table not found"));
         String raw = qrTokens.rotate(table);
+        // Xoay QR làm link cũ hết hiệu lực: ghi lại (không ghi token).
+        audit.record("TABLE_QR_ROTATED", "TABLE", String.valueOf(table.getId()), table.getTableCode());
         return toQr(table, raw);
     }
 

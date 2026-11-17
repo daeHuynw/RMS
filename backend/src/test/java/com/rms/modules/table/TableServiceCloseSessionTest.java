@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.rms.exception.ApiException;
+import com.rms.modules.audit.service.AuditService;
 import com.rms.modules.order.entity.OrderStatus;
 import com.rms.modules.order.repository.OrderRepository;
 import com.rms.modules.reservation.entity.Reservation;
@@ -56,7 +57,8 @@ class TableServiceCloseSessionTest {
         reservations = mock(ReservationRepository.class);
         orders = mock(OrderRepository.class);
         service = new TableService(
-                tables, sessions, mock(UserRepository.class), mock(QrTokenService.class), reservations, orders);
+                tables, sessions, mock(UserRepository.class), mock(QrTokenService.class), reservations, orders,
+                mock(AuditService.class));
 
         table = withId(new DiningTable("T04", 6, "VIP"), TABLE_ID);
         table.setStatus(TableStatus.OCCUPIED);

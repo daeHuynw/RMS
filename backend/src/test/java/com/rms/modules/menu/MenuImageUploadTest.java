@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.rms.exception.ApiException;
+import com.rms.modules.audit.service.AuditService;
 import com.rms.modules.category.entity.Category;
 import com.rms.modules.category.repository.CategoryRepository;
 import com.rms.modules.menu.entity.MenuItem;
@@ -48,7 +49,7 @@ class MenuImageUploadTest {
     @BeforeEach
     void setUp() {
         MenuItemRepository menuItems = mock(MenuItemRepository.class);
-        service = new MenuService(mock(CategoryRepository.class), menuItems);
+        service = new MenuService(mock(CategoryRepository.class), menuItems, mock(AuditService.class));
         service.setMenuDirectory(uploads.toString());
 
         Category food = new Category("Món chính", null);
