@@ -44,6 +44,11 @@ public class PaymentService {
     @Transactional
     public Response record(Long orderId, String idempotencyKey, RecordRequest request) {
         String key = requireIdempotencyKey(idempotencyKey);
+        // Khoá dòng đơn TRƯỚC rồi mới tra key (REVIEW C4): các yêu cầu trùng key gửi cùng lúc phải chờ nhau,
+        // và yêu cầu tới sau thấy được thanh toán mà yêu cầu trước vừa commit, nên nhận lại đúng kết quả cũ
+        // thay vì vấp "đơn không còn SERVED". Khoá là câu đọc đầu tiên của transaction, nên các câu đọc sau
+        // (MySQL REPEATABLE READ) lấy ảnh dữ liệu từ sau thời điểm có khoá.
+        Order order = orders.lockById(orderId).orElseThrow(() -> ApiException.notFound("Order not found"));
         var existing = payments.findByIdempotencyKey(key);
         if (existing.isPresent()) {
             Payment payment = existing.get();
@@ -57,7 +62,6 @@ public class PaymentService {
                     invoice == null ? null : invoice.getInvoiceNumber());
         }
 
-        Order order = orders.lockById(orderId).orElseThrow(() -> ApiException.notFound("Order not found"));
         if (order.getStatus() != OrderStatus.SERVED) {
             throw ApiException.conflict("ORDER_NOT_PAYABLE", "Only SERVED orders can be settled");
         }
