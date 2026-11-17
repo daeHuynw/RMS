@@ -19,6 +19,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 @Entity
 @Table(name = "orders")
@@ -74,9 +76,13 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
+    // Cột do MySQL tự điền (DEFAULT / ON UPDATE CURRENT_TIMESTAMP). @Generated bảo Hibernate đọc lại giá trị
+    // ngay sau khi INSERT/UPDATE, nên response tạo đơn có createdAt thay vì null (REVIEW C4).
+    @Generated(event = EventType.INSERT)
     @Column(nullable = false, insertable = false, updatable = false)
     private Instant createdAt;
 
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
     @Column(nullable = false, insertable = false, updatable = false)
     private Instant updatedAt;
 
