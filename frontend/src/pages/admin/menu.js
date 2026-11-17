@@ -1,6 +1,7 @@
 import { api } from '../../api.js'
 import { requireAdmin } from './requireAdmin.js'
 import { mountAppNav } from '../../nav.js'
+import { escapeHtml, money } from '../../utils.js'
 
 await mountAppNav()
 
@@ -23,22 +24,6 @@ function flash(message, isError) {
   errorEl.hidden = !isError
   okEl.hidden = isError
   ;(isError ? errorEl : okEl).textContent = message
-}
-
-function money(value) {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0,
-  }).format(Number(value))
-}
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
 }
 
 function resetForm() {

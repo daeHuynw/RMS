@@ -1,8 +1,10 @@
-import { api, accessToken } from '../../api.js'
+import { api } from '../../api.js'
+import { hasAnyRole } from '../../auth.js'
 import { addToCart } from '../../cart.js'
-import { mountAppNav } from '../../nav.js'
+import { CART_ROLES, mountAppNav } from '../../nav.js'
+import { escapeHtml, money, sendErrorText, sendIdempotent } from '../../utils.js'
 
-await mountAppNav()
+const me = await mountAppNav()
 
 const loadingEl = document.getElementById('menu-loading')
 const errorEl = document.getElementById('menu-error')
@@ -17,6 +19,7 @@ let catalog = { categories: [], items: [] }
 let activeCategoryId = null
 /** @type {{ reservationId:number, tableId:number, tableCode:string, tableSessionId:number } | null} */
 let orderContext = null
+/** Khách / ADMIN đã đăng nhập mới có Thêm giỏ, Đặt ngay; STAFF/KITCHEN chỉ xem. */
 let loggedIn = false
 
 function showError(message) {
@@ -29,27 +32,6 @@ function flash(message, isError) {
   errorEl.hidden = !isError
   okEl.hidden = isError
   ;(isError ? errorEl : okEl).textContent = message
-}
-
-function money(value) {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0,
-  }).format(Number(value))
-}
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-}
-
-function idempotencyKey() {
-  if (globalThis.crypto?.randomUUID) return crypto.randomUUID()
-  return `ord-${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
 function canOrder() {
@@ -166,18 +148,17 @@ listEl.addEventListener('click', async (event) => {
     const item = payloadFromBtn(orderBtn)
     orderBtn.disabled = true
     try {
-      const order = await api('/orders', {
-        method: 'POST',
-        headers: { 'Idempotency-Key': idempotencyKey() },
-        body: JSON.stringify({
-          items: [{ menuItemId: item.id, quantity: 1 }],
-          customerNote: null,
-          discountCode: null,
-        }),
+      const body = JSON.stringify({
+        items: [{ menuItemId: item.id, quantity: 1 }],
+        customerNote: null,
+        discountCode: null,
       })
+      const order = await sendIdempotent(`order-now:${item.id}`, body, (key) =>
+        api('/orders', { method: 'POST', headers: { 'Idempotency-Key': key }, body }),
+      )
       flash(`Đã đặt ngay ${order.orderNumber} · ${money(order.totalAmount)}`, false)
     } catch (err) {
-      flash(err.message || 'Đặt ngay thất bại', true)
+      flash(sendErrorText(err, 'Đặt ngay thất bại'), true)
     } finally {
       orderBtn.disabled = false
     }
@@ -185,10 +166,12 @@ listEl.addEventListener('click', async (event) => {
 })
 
 async function loadContext() {
-  loggedIn = Boolean(accessToken())
+  loggedIn = me != null && hasAnyRole(me, CART_ROLES)
   if (!loggedIn) {
     hintEl.hidden = false
-    hintEl.textContent = 'Xem món tự do. Đăng nhập → đặt bàn → check-in mới gọi món / thêm giỏ.'
+    hintEl.textContent = me
+      ? 'Tài khoản nhân viên chỉ xem thực đơn (không có giỏ).'
+      : 'Xem món tự do. Đăng nhập → đặt bàn → check-in mới gọi món / thêm giỏ.'
     return
   }
   try {

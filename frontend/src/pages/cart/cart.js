@@ -1,10 +1,11 @@
 import { api, accessToken } from '../../api.js'
-import { mountAppNav } from '../../nav.js'
+import { CART_ROLES, mountAppNav } from '../../nav.js'
 import { clearCart, getCart, removeFromCart, setCartQty } from '../../cart.js'
 import { requireRoles } from '../../auth.js'
+import { escapeHtml, money, sendErrorText, sendIdempotent } from '../../utils.js'
 
 await mountAppNav()
-await requireRoles(['CUSTOMER', 'STAFF', 'KITCHEN', 'ADMIN'])
+await requireRoles(CART_ROLES)
 
 const errorEl = document.querySelector('#error')
 const okEl = document.querySelector('#ok')
@@ -24,26 +25,6 @@ function flash(message, isError) {
   errorEl.hidden = !isError
   okEl.hidden = isError
   ;(isError ? errorEl : okEl).textContent = message
-}
-
-function money(value) {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0,
-  }).format(Number(value))
-}
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-}
-
-function idempotencyKey() {
-  if (globalThis.crypto?.randomUUID) return crypto.randomUUID()
-  return `ord-${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
 function render() {
@@ -105,23 +86,22 @@ placeBtn.addEventListener('click', async () => {
     return
   }
   placeBtn.disabled = true
+  const body = JSON.stringify({
+    items: items.map((i) => ({ menuItemId: i.id, quantity: i.quantity })),
+    customerNote: noteEl.value.trim() || null,
+    discountCode: discountEl.value.trim() || null,
+  })
   try {
-    const order = await api('/orders', {
-      method: 'POST',
-      headers: { 'Idempotency-Key': idempotencyKey() },
-      body: JSON.stringify({
-        items: items.map((i) => ({ menuItemId: i.id, quantity: i.quantity })),
-        customerNote: noteEl.value.trim() || null,
-        discountCode: discountEl.value.trim() || null,
-      }),
-    })
+    const order = await sendIdempotent('cart', body, (key) =>
+      api('/orders', { method: 'POST', headers: { 'Idempotency-Key': key }, body }),
+    )
     clearCart()
     render()
     flash(`Đã đặt ${order.orderNumber}`, false)
     lastOrderEl.hidden = false
     lastOrderEl.textContent = `${order.orderNumber} · ${order.status} · ${money(order.totalAmount)}`
   } catch (err) {
-    flash(err.message || 'Đặt món thất bại', true)
+    flash(sendErrorText(err, 'Đặt món thất bại'), true)
   } finally {
     placeBtn.disabled = false
   }

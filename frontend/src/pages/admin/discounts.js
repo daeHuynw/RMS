@@ -1,6 +1,7 @@
 import { api } from '../../api.js'
 import { requireAdmin } from './requireAdmin.js'
 import { mountAppNav } from '../../nav.js'
+import { escapeHtml } from '../../utils.js'
 
 await mountAppNav()
 
@@ -19,13 +20,6 @@ function flash(message, isError) {
   errorEl.hidden = !isError
   okEl.hidden = isError
   ;(isError ? errorEl : okEl).textContent = message
-}
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
 }
 
 function toLocalInput(iso) {

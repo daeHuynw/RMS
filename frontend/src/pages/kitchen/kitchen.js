@@ -2,6 +2,7 @@ import { Client } from '@stomp/stompjs'
 import { api, accessToken } from '../../api.js'
 import { requireKitchen } from './requireKitchen.js'
 import { mountAppNav } from '../../nav.js'
+import { escapeHtml, formatTime } from '../../utils.js'
 
 await mountAppNav()
 
@@ -12,17 +13,6 @@ const wsStatusEl = document.querySelector('#ws-status')
 const NEXT = {
   PENDING: 'PREPARING',
   PREPARING: 'READY',
-}
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-}
-
-function fmt(iso) {
-  return iso ? new Date(iso).toLocaleTimeString('vi-VN') : ''
 }
 
 function showError(message) {
@@ -61,7 +51,7 @@ function render(tickets) {
     card.innerHTML = `
       <header>
         <strong>${escapeHtml(ticket.orderNumber)}</strong>
-        <span class="muted">${escapeHtml(ticket.tableCode || '—')} · ${fmt(ticket.createdAt)}</span>
+        <span class="muted">${escapeHtml(ticket.tableCode || '—')} · ${formatTime(ticket.createdAt)}</span>
       </header>
       <ul>${items}</ul>
     `

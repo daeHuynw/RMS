@@ -5,13 +5,27 @@ import { mountAppNav } from './nav.js'
 const form = document.querySelector('#login-form')
 const error = document.querySelector('#error')
 
-await mountAppNav()
+const me = await mountAppNav()
+if (accessToken() && me) {
+  window.location.href = homePathFor(me)
+}
 
-if (accessToken()) {
-  const me = await fetchMe()
-  if (me) {
-    window.location.href = homePathFor(me)
+// Phân biệt lỗi đăng nhập: chỉ 401 mới là sai email/mật khẩu (backend cố ý trả cùng
+// 401 cho tài khoản bị khoá để không lộ email nào tồn tại).
+function loginErrorMessage(err) {
+  if (err.status == null) {
+    return 'Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.'
   }
+  if (err.status === 401) {
+    return 'Sai email hoặc mật khẩu (hoặc tài khoản đã bị khoá).'
+  }
+  if (err.status === 400) {
+    return 'Email hoặc mật khẩu không đúng định dạng.'
+  }
+  if (err.status >= 500) {
+    return 'Máy chủ đang lỗi. Thử lại sau ít phút.'
+  }
+  return err.message || 'Đăng nhập thất bại.'
 }
 
 form.addEventListener('submit', async (event) => {
@@ -26,11 +40,11 @@ form.addEventListener('submit', async (event) => {
       }),
     })
     saveTokens(login.accessToken, login.refreshToken)
-    const me = await api('/auth/me')
-    window.location.href = homePathFor(me)
-  } catch {
+    const user = await fetchMe()
+    window.location.href = homePathFor(user)
+  } catch (err) {
     clearTokens()
-    error.textContent = 'Sai email hoặc mật khẩu.'
+    error.textContent = loginErrorMessage(err)
     error.hidden = false
   }
 })

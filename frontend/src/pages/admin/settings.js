@@ -1,6 +1,7 @@
 import { api } from '../../api.js'
 import { requireAdmin } from './requireAdmin.js'
 import { mountAppNav } from '../../nav.js'
+import { formatDateTime } from '../../utils.js'
 
 await mountAppNav()
 
@@ -20,7 +21,7 @@ async function load() {
   form.taxRate.value = s.taxRate
   form.reservationDurationMinutes.value = s.reservationDurationMinutes
   updatedAt.textContent = s.updatedAt
-    ? `Cập nhật lần cuối: ${new Date(s.updatedAt).toLocaleString('vi-VN')}`
+    ? `Cập nhật lần cuối: ${formatDateTime(s.updatedAt)}`
     : ''
 }
 

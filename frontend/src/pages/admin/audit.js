@@ -1,6 +1,7 @@
 import { api } from '../../api.js'
 import { requireAdmin } from './requireAdmin.js'
 import { mountAppNav } from '../../nav.js'
+import { escapeHtml, formatDateTime } from '../../utils.js'
 
 await mountAppNav()
 
@@ -9,13 +10,6 @@ const loadingEl = document.querySelector('#loading')
 const tableEl = document.querySelector('#audit-table')
 const bodyEl = document.querySelector('#audit-body')
 
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-}
-
 await requireAdmin()
 try {
   const rows = await api('/admin/audit')
@@ -23,7 +17,7 @@ try {
   for (const row of rows) {
     const tr = document.createElement('tr')
     tr.innerHTML = `
-      <td class="muted">${new Date(row.createdAt).toLocaleString('vi-VN')}</td>
+      <td class="muted">${formatDateTime(row.createdAt)}</td>
       <td>${row.actorId ?? '—'}</td>
       <td><strong>${escapeHtml(row.action)}</strong></td>
       <td class="muted">${escapeHtml(row.targetType)} ${escapeHtml(row.targetId || '')}</td>

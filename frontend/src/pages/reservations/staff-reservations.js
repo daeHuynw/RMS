@@ -1,6 +1,7 @@
 import { api } from '../../api.js'
 import { requireStaff } from '../staff/requireStaff.js'
 import { mountAppNav } from '../../nav.js'
+import { escapeHtml, formatDateTime } from '../../utils.js'
 
 await mountAppNav()
 
@@ -14,17 +15,6 @@ function flash(message, isError) {
   errorEl.hidden = !isError
   okEl.hidden = isError
   ;(isError ? errorEl : okEl).textContent = message
-}
-
-function fmt(iso) {
-  return new Date(iso).toLocaleString('vi-VN')
-}
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
 }
 
 function actionsFor(status, id) {
@@ -59,7 +49,7 @@ async function load() {
         ${escapeHtml(r.guestName || '')}<br />
         <span class="muted">${escapeHtml(r.guestPhone || '')} · ${r.guestCount} khách</span>
       </td>
-      <td class="muted">${fmt(r.start)}<br />→ ${fmt(r.end)}</td>
+      <td class="muted">${formatDateTime(r.start)}<br />→ ${formatDateTime(r.end)}</td>
       <td><span class="badge">${escapeHtml(r.status)}</span></td>
       <td><div class="admin-actions">${actionsFor(r.status, r.id)}</div></td>
     `

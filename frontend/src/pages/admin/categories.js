@@ -1,6 +1,7 @@
 import { api } from '../../api.js'
 import { requireAdmin } from './requireAdmin.js'
 import { mountAppNav } from '../../nav.js'
+import { escapeHtml } from '../../utils.js'
 
 await mountAppNav()
 
@@ -26,14 +27,6 @@ function resetForm() {
   form.name.value = ''
   form.description.value = ''
   formTitle.textContent = 'Thêm danh mục'
-}
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
 }
 
 function render() {

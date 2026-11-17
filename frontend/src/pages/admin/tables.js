@@ -1,6 +1,7 @@
 import { api } from '../../api.js'
 import { requireAdmin } from './requireAdmin.js'
 import { mountAppNav } from '../../nav.js'
+import { escapeHtml } from '../../utils.js'
 
 await mountAppNav()
 
@@ -35,13 +36,6 @@ function resetForm() {
   formTitle.textContent = 'Thêm bàn'
   selectedId = null
   qrBox.hidden = true
-}
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
 }
 
 function render() {

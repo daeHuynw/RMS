@@ -1,6 +1,7 @@
 import { api, apiBlob } from '../../api.js'
 import { requireStaff } from '../staff/requireStaff.js'
 import { mountAppNav } from '../../nav.js'
+import { escapeHtml, money, formatDateTime, sendErrorText, sendIdempotent } from '../../utils.js'
 
 await mountAppNav()
 
@@ -10,7 +11,16 @@ const loadingEl = document.querySelector('#loading')
 const listEl = document.querySelector('#order-list')
 const form = document.querySelector('#create-form')
 const sessionSelect = document.querySelector('#sessionId')
-const menuSelect = document.querySelector('#menuItemId')
+const itemRowsEl = document.querySelector('#item-rows')
+const addRowBtn = document.querySelector('#add-item-row')
+
+/** Món đang bán, nạp một lần từ /menu cho các ô chọn món. */
+let menuItems = []
+
+const PAY_METHODS = {
+  CASH: 'Tiền mặt',
+  BANK_TRANSFER: 'Chuyển khoản',
+}
 
 // Staff chỉ bấm hai bước: xác nhận đơn và mang ra. IN_PROGRESS / READY do bếp quyết định
 // (bếp bắt đầu món đầu tiên → IN_PROGRESS, mọi món xong → READY); backend từ chối nếu gửi tay.
@@ -30,25 +40,6 @@ function flash(message, isError) {
   ;(isError ? errorEl : okEl).textContent = message
 }
 
-function money(value) {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0,
-  }).format(Number(value))
-}
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-}
-
-function fmt(iso) {
-  return iso ? new Date(iso).toLocaleString('vi-VN') : ''
-}
-
 async function loadSessionsAndMenu() {
   const [sessions, catalog] = await Promise.all([
     api('/staff/sessions/open'),
@@ -65,13 +56,62 @@ async function loadSessionsAndMenu() {
       sessionSelect.append(opt)
     }
   }
-  menuSelect.innerHTML = ''
-  for (const item of catalog.items || []) {
-    const opt = document.createElement('option')
-    opt.value = item.id
-    opt.textContent = `${item.name} · ${money(item.price)}`
-    menuSelect.append(opt)
+  menuItems = catalog.items || []
+  resetItemRows()
+}
+
+// Mỗi dòng: chọn món + số lượng + nút xoá. Luôn còn ít nhất một dòng.
+function addItemRow() {
+  const row = document.createElement('div')
+  row.className = 'item-row'
+  const options = menuItems
+    .map((item) => `<option value="${item.id}">${escapeHtml(item.name)} · ${money(item.price)}</option>`)
+    .join('')
+  row.innerHTML = `
+    <select data-item-select required aria-label="Món">${options}</select>
+    <input data-item-qty type="number" min="1" max="99" value="1" required aria-label="Số lượng" />
+    <button type="button" class="btn-secondary" data-remove-row>Xoá</button>
+  `
+  itemRowsEl.append(row)
+}
+
+function resetItemRows() {
+  itemRowsEl.innerHTML = ''
+  addItemRow()
+}
+
+/** Gộp các dòng trùng món thành một (bếp nhận một dòng "Pepsi × 3" thay vì ba dòng). */
+function collectItems() {
+  const byId = new Map()
+  for (const row of itemRowsEl.querySelectorAll('.item-row')) {
+    const id = Number(row.querySelector('[data-item-select]').value)
+    const qty = Number(row.querySelector('[data-item-qty]').value)
+    if (!id || !qty) continue
+    byId.set(id, (byId.get(id) || 0) + qty)
   }
+  return [...byId].map(([menuItemId, quantity]) => ({ menuItemId, quantity }))
+}
+
+addRowBtn.addEventListener('click', addItemRow)
+
+itemRowsEl.addEventListener('click', (event) => {
+  const btn = event.target.closest?.('[data-remove-row]')
+  if (!btn) return
+  btn.closest('.item-row').remove()
+  if (!itemRowsEl.querySelector('.item-row')) addItemRow()
+})
+
+function payBox(order) {
+  const options = Object.entries(PAY_METHODS)
+    .map(([value, label]) => `<option value="${value}">${label}</option>`)
+    .join('')
+  return `
+    <span class="pay-box">
+      <select data-pay-method="${order.id}" aria-label="Cách thu">${options}</select>
+      <input data-pay-ref="${order.id}" maxlength="120" placeholder="Mã giao dịch (tuỳ chọn)" hidden />
+      <button type="button" data-pay="${order.id}" data-amount="${order.totalAmount}">Thu ${money(order.totalAmount)}</button>
+    </span>
+  `
 }
 
 async function loadOrders() {
@@ -97,12 +137,12 @@ async function loadOrders() {
         <strong>${escapeHtml(order.orderNumber)}</strong>
         <span class="badge">${escapeHtml(order.status)}</span>
       </div>
-      <p class="muted">${escapeHtml(order.tableCode || '—')} · ${fmt(order.createdAt)} · ${money(order.totalAmount)}</p>
+      <p class="muted">${escapeHtml(order.tableCode || '—')} · ${formatDateTime(order.createdAt)} · ${money(order.totalAmount)}</p>
       <ul class="order-lines">${lines}</ul>
       <div class="admin-actions">
         ${next ? `<button type="button" data-status="${order.id}" data-next="${next}">→ ${next}</button>` : ''}
         ${WAITING_FOR_KITCHEN[order.status] ? `<span class="muted">${WAITING_FOR_KITCHEN[order.status]}</span>` : ''}
-        ${canPay ? `<button type="button" data-pay="${order.id}" data-amount="${order.totalAmount}">Thanh toán tiền mặt</button>` : ''}
+        ${canPay ? payBox(order) : ''}
         ${canInvoice ? `<button type="button" class="btn-secondary" data-invoice="${order.id}">Hóa đơn PDF</button>` : ''}
         ${canCancel ? `<button type="button" class="btn-danger" data-cancel="${order.id}">Hủy</button>` : ''}
       </div>
@@ -113,25 +153,41 @@ async function loadOrders() {
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault()
+  const items = collectItems()
+  if (!items.length) {
+    flash('Chọn ít nhất một món', true)
+    return
+  }
+  const submitBtn = form.querySelector('button[type="submit"]')
+  submitBtn.disabled = true
+  const body = JSON.stringify({
+    tableSessionId: Number(form.sessionId.value),
+    items,
+    customerNote: form.customerNote.value.trim() || null,
+    discountCode: form.discountCode.value.trim() || null,
+  })
   try {
-    await api('/staff/orders', {
-      method: 'POST',
-      headers: { 'Idempotency-Key': crypto.randomUUID() },
-      body: JSON.stringify({
-        tableSessionId: Number(form.sessionId.value),
-        items: [{ menuItemId: Number(form.menuItemId.value), quantity: Number(form.quantity.value) }],
-        customerNote: form.customerNote.value.trim() || null,
-        discountCode: form.discountCode.value.trim() || null,
-      }),
-    })
-    flash('Đã tạo đơn', false)
-    form.quantity.value = '1'
+    const order = await sendIdempotent('staff-create', body, (key) =>
+      api('/staff/orders', { method: 'POST', headers: { 'Idempotency-Key': key }, body }),
+    )
+    flash(`Đã tạo ${order.orderNumber} · ${money(order.totalAmount)}`, false)
+    resetItemRows()
     form.customerNote.value = ''
     form.discountCode.value = ''
     await loadOrders()
   } catch (err) {
-    flash(err.message || 'Tạo đơn thất bại', true)
+    flash(sendErrorText(err, 'Tạo đơn thất bại'), true)
+  } finally {
+    submitBtn.disabled = false
   }
+})
+
+// Chọn "Chuyển khoản" mới hiện ô mã giao dịch.
+listEl.addEventListener('change', (event) => {
+  const orderId = event.target.getAttribute?.('data-pay-method')
+  if (!orderId) return
+  const refInput = listEl.querySelector(`[data-pay-ref="${orderId}"]`)
+  refInput.hidden = event.target.value !== 'BANK_TRANSFER'
 })
 
 listEl.addEventListener('click', async (event) => {
@@ -161,17 +217,25 @@ listEl.addEventListener('click', async (event) => {
       return
     }
     if (payId) {
-      const payment = await api(`/staff/orders/${payId}/payments`, {
-        method: 'POST',
-        headers: { 'Idempotency-Key': crypto.randomUUID() },
-        body: JSON.stringify({
-          amount: Number(amount),
-          method: 'CASH',
-          reference: null,
-        }),
-      })
-      flash(`Đã thu ${money(payment.amount)} · HĐ ${payment.invoiceNumber}`, false)
-      await loadOrders()
+      const method = listEl.querySelector(`[data-pay-method="${payId}"]`).value
+      const reference = method === 'BANK_TRANSFER'
+        ? listEl.querySelector(`[data-pay-ref="${payId}"]`).value.trim() || null
+        : null
+      const body = JSON.stringify({ amount: Number(amount), method, reference })
+      event.target.disabled = true
+      try {
+        const payment = await sendIdempotent(`pay:${payId}`, body, (key) =>
+          api(`/staff/orders/${payId}/payments`, {
+            method: 'POST',
+            headers: { 'Idempotency-Key': key },
+            body,
+          }),
+        )
+        flash(`Đã thu ${money(payment.amount)} (${PAY_METHODS[method]}) · HĐ ${payment.invoiceNumber}`, false)
+        await loadOrders()
+      } finally {
+        event.target.disabled = false
+      }
       return
     }
     if (invoiceOrderId) {
@@ -186,7 +250,7 @@ listEl.addEventListener('click', async (event) => {
       flash(`Đã tải ${invoice.invoiceNumber}.pdf`, false)
     }
   } catch (err) {
-    flash(err.message || 'Thao tác thất bại', true)
+    flash(sendErrorText(err, 'Thao tác thất bại'), true)
   }
 })
 

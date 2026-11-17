@@ -33,10 +33,9 @@
             <form id="create-form">
               <label for="sessionId">Phiên bàn</label>
               <select id="sessionId" required></select>
-              <label for="menuItemId">Món</label>
-              <select id="menuItemId" required></select>
-              <label for="quantity">Số lượng</label>
-              <input id="quantity" type="number" min="1" max="99" value="1" required />
+              <label>Món · số lượng</label>
+              <div id="item-rows"></div>
+              <button type="button" class="btn-secondary" id="add-item-row" style="margin-top: 8px">+ Thêm món</button>
               <label for="discountCode">Mã giảm giá</label>
               <input id="discountCode" maxlength="40" placeholder="SUMMER10" />
               <label for="customerNote">Ghi chú</label>

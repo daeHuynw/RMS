@@ -2,6 +2,7 @@ import { api } from '../../api.js'
 import { fetchMe } from '../../auth.js'
 import { requireAdmin } from './requireAdmin.js'
 import { mountAppNav } from '../../nav.js'
+import { escapeHtml, money } from '../../utils.js'
 
 await mountAppNav()
 
@@ -45,27 +46,11 @@ async function explainLoadError(err) {
   showError(err.message || 'Tải dashboard thất bại')
 }
 
-function money(value) {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0))
-}
-
 function moneyShort(value) {
   const n = Number(value || 0)
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)}tr`
   if (n >= 1_000) return `${Math.round(n / 1_000)}k`
   return String(Math.round(n))
-}
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
 }
 
 function localIsoDate(d) {

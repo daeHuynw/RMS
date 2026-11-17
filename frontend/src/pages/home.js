@@ -1,5 +1,6 @@
 import { mountAppNav } from '../nav.js'
 import { hasAnyRole } from '../auth.js'
+import { escapeHtml } from '../utils.js'
 
 const titleEl = document.querySelector('#home-title')
 const subEl = document.querySelector('#home-sub')
@@ -73,13 +74,6 @@ const CARDS = [
     roles: 'guest-only',
   },
 ]
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-}
 
 function visibleCards(me) {
   return CARDS.filter((card) => {
