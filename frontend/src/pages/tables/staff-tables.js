@@ -1,6 +1,7 @@
 import { api } from '../../api.js'
 import { requireStaff } from '../staff/requireStaff.js'
 import { mountAppNav } from '../../nav.js'
+import { escapeHtml } from '../../utils.js'
 
 await mountAppNav()
 
@@ -22,14 +23,6 @@ let tables = []
 let openSessions = []
 let selectedArea = ''
 let tickTimer = null
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-}
 
 function flash(message, isError) {
   errorEl.hidden = !isError

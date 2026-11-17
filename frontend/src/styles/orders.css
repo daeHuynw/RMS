@@ -67,6 +67,35 @@
   background: #0f172a;
 }
 
+/* Staff tạo đơn: mỗi dòng = chọn món + số lượng + xoá */
+.item-row {
+  display: grid;
+  grid-template-columns: 1fr 72px auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.item-row select,
+.item-row input {
+  margin-top: 0;
+}
+
+.pay-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.pay-box select,
+.pay-box input {
+  width: auto;
+  margin-top: 0;
+  padding: 6px 8px;
+  font-size: 0.8rem;
+}
+
 .order-card {
   border-top: 1px solid #e2e8f0;
   padding: 14px 0;

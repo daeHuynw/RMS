@@ -1,6 +1,7 @@
 import { api } from '../../api.js'
 import { requireCustomer } from '../auth/requireCustomer.js'
 import { mountAppNav } from '../../nav.js'
+import { escapeHtml, formatDateTime } from '../../utils.js'
 
 await mountAppNav()
 
@@ -24,17 +25,6 @@ function toIso(localValue) {
   return new Date(localValue).toISOString()
 }
 
-function fmt(iso) {
-  return new Date(iso).toLocaleString('vi-VN')
-}
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-}
-
 async function loadMine() {
   const rows = await api('/reservations/my')
   loadingEl.hidden = true
@@ -51,7 +41,7 @@ async function loadMine() {
     card.innerHTML = `
       <strong>${escapeHtml(r.tableCode)}</strong>
       <span class="badge">${escapeHtml(r.status)}</span>
-      <p class="muted">${fmt(r.start)} → ${fmt(r.end)} · ${r.guestCount} khách</p>
+      <p class="muted">${formatDateTime(r.start)} → ${formatDateTime(r.end)} · ${r.guestCount} khách</p>
       ${r.specialRequest ? `<p class="muted">${escapeHtml(r.specialRequest)}</p>` : ''}
       <div class="admin-actions">
         ${canOrder ? `<a class="menu-link" href="/menu.html">Gọi món</a>` : ''}

@@ -1,5 +1,6 @@
-import { fetchMe, hasAnyRole, logoutAndRedirect } from './auth.js'
+import { SERVER_UNREACHABLE, fetchMe, hasAnyRole, logoutAndRedirect, showPageError } from './auth.js'
 import { cartCount, clearCart, onCartChange } from './cart.js'
+import { escapeHtml } from './utils.js'
 
 /**
  * Nav items: roles=null → luôn hiện (kể cả khách).
@@ -53,7 +54,10 @@ function visibleLinks(me) {
   })
 }
 
-function render(me) {
+// Giỏ chỉ có ý nghĩa với người đặt bàn được (cùng nhóm vai với link "Đặt bàn").
+export const CART_ROLES = ['CUSTOMER', 'ADMIN']
+
+function render(me, failed) {
   const path = window.location.pathname
   const links = visibleLinks(me)
     .map((link) => {
@@ -63,16 +67,23 @@ function render(me) {
     .join('')
 
   const count = cartCount()
-  const cartBit = me
+  const cartBit = me && hasAnyRole(me, CART_ROLES)
     ? `<a class="app-nav-cart" id="app-nav-cart" href="/cart.html">Giỏ${count ? ` (${count})` : ''}</a>`
     : ''
 
-  const authBit = me
-    ? `<span class="app-nav-user">${escapeHtml(me.fullName)} · ${escapeHtml(me.roles.join(', '))}</span>
+  const logoutBtn = '<button type="button" class="app-nav-logout" id="app-nav-logout">Đăng xuất</button>'
+  let authBit
+  if (me) {
+    authBit = `<span class="app-nav-user">${escapeHtml(me.fullName)} · ${escapeHtml(me.roles.join(', '))}</span>
        ${cartBit}
-       <button type="button" class="app-nav-logout" id="app-nav-logout">Đăng xuất</button>`
-    : `<a class="app-nav-link" href="/">Đăng nhập</a>
+       ${logoutBtn}`
+  } else if (failed) {
+    // Còn token nhưng không hỏi được server: không giả làm khách, vẫn cho đăng xuất.
+    authBit = `<span class="app-nav-user">Mất kết nối</span>${logoutBtn}`
+  } else {
+    authBit = `<a class="app-nav-link" href="/">Đăng nhập</a>
        <a class="app-nav-link" href="/register.html">Đăng ký</a>`
+  }
 
   return `
     <div class="app-nav-inner">
@@ -81,13 +92,6 @@ function render(me) {
       <div class="app-nav-auth">${authBit}</div>
     </div>
   `
-}
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
 }
 
 /**
@@ -105,8 +109,17 @@ export async function mountAppNav() {
     el.classList.add('app-nav')
   }
 
-  const me = await fetchMe()
-  el.innerHTML = render(me)
+  let me = null
+  let failed = false
+  try {
+    me = await fetchMe()
+  } catch {
+    failed = true
+  }
+  el.innerHTML = render(me, failed)
+  if (failed) {
+    showPageError(SERVER_UNREACHABLE)
+  }
 
   const logoutBtn = el.querySelector('#app-nav-logout')
   if (logoutBtn) {
