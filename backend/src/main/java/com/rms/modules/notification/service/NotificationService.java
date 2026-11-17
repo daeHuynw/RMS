@@ -59,7 +59,7 @@ public class NotificationService {
 
     @Transactional
     public void markAll(long userId) {
-        notifications.findTop50ByUser_IdOrderByCreatedAtDesc(userId).forEach(Notification::markRead);
+        notifications.markAllRead(userId);
     }
 
     private static String trim(String value, int max) {
