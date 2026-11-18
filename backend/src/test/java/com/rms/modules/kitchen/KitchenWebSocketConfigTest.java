@@ -46,7 +46,8 @@ class KitchenWebSocketConfigTest {
         jwt = mock(JwtService.class);
         users = mock(UserRepository.class);
         var registration = new CapturingRegistration();
-        new KitchenWebSocketConfig(jwt, users).configureClientInboundChannel(registration);
+        new KitchenWebSocketConfig(jwt, users, new String[] {"http://localhost:5173"})
+                .configureClientInboundChannel(registration);
         interceptor = registration.captured().get(0);
     }
 

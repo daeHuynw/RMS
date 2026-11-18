@@ -1,5 +1,7 @@
 package com.rms.modules.kitchen.config;
 
+import java.util.Arrays;
+import org.springframework.beans.factory.annotation.Value;
 import com.rms.modules.user.repository.UserRepository;
 import com.rms.security.JwtService;
 import org.springframework.context.annotation.Configuration;
@@ -24,10 +26,22 @@ public class KitchenWebSocketConfig implements WebSocketMessageBrokerConfigurer 
 
     private final JwtService jwt;
     private final UserRepository users;
+    private final String[] allowedOrigins;
 
-    public KitchenWebSocketConfig(JwtService jwt, UserRepository users) {
+    /**
+     * @param allowedOrigins origin được mở /ws (rms.web.allowed-origins, env RMS_ALLOWED_ORIGINS, cách nhau
+     *                       bởi dấu phẩy). Nhận cả mẫu như https://*.example.com.
+     */
+    public KitchenWebSocketConfig(
+            JwtService jwt,
+            UserRepository users,
+            @Value("${rms.web.allowed-origins}") String[] allowedOrigins) {
         this.jwt = jwt;
         this.users = users;
+        this.allowedOrigins = Arrays.stream(allowedOrigins)
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toArray(String[]::new);
     }
 
     @Override
@@ -38,7 +52,8 @@ public class KitchenWebSocketConfig implements WebSocketMessageBrokerConfigurer 
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").setAllowedOriginPatterns("*");
+        // Trình duyệt luôn gửi Origin khi mở WebSocket; origin lạ bị Spring trả 403 lúc bắt tay.
+        registry.addEndpoint("/ws").setAllowedOriginPatterns(allowedOrigins);
     }
 
     @Override

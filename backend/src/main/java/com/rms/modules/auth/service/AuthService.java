@@ -108,6 +108,12 @@ public class AuthService {
         return issue(current.getUser());
     }
 
+    /** Xoá refresh token đã thu hồi hoặc hết hạn trước {@code cutoff}. Gọi từ RefreshTokenCleanupJob. */
+    @Transactional
+    public int purgeRefreshTokensBefore(Instant cutoff) {
+        return refreshTokens.deleteRevokedOrExpiredBefore(cutoff);
+    }
+
     @Transactional
     public void logout(String rawToken, Long userId) {
         RefreshToken token = refreshTokens.findByTokenHash(hash(rawToken)).orElse(null);

@@ -44,10 +44,17 @@ rms:
     jwt-secret: ${RMS_JWT_SECRET:}
     access-token-minutes: 30
     refresh-token-days: 30
+    # Token đã thu hồi / hết hạn được giữ thêm bấy nhiêu ngày (để tra cứu) rồi job xoá.
+    refresh-token-retention-days: 7
+    # Lịch job dọn token (cron Spring: giây phút giờ ngày tháng thứ), theo giờ nhà hàng rms.time-zone.
+    refresh-token-cleanup-cron: "0 0 3 * * *"
     login:
       # Mỗi email thử tối đa 5 lần trong 15 phút; lần thứ 5 vẫn sai thì khoá email đó 15 phút (429).
       max-attempts: 5
       window: 15m
       lock-duration: 15m
+  web:
+    # Origin được mở WebSocket /ws (cách nhau bởi dấu phẩy). Mở app qua IP LAN thì thêm http://<IP>:5173.
+    allowed-origins: ${RMS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
   storage:
     menu-dir: ${RMS_MENU_DIR:uploads/menu}
