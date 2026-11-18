@@ -44,5 +44,10 @@ rms:
     jwt-secret: ${RMS_JWT_SECRET:}
     access-token-minutes: 30
     refresh-token-days: 30
+    login:
+      # Mỗi email thử tối đa 5 lần trong 15 phút; lần thứ 5 vẫn sai thì khoá email đó 15 phút (429).
+      max-attempts: 5
+      window: 15m
+      lock-duration: 15m
   storage:
     menu-dir: ${RMS_MENU_DIR:uploads/menu}

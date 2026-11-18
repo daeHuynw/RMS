@@ -19,6 +19,10 @@ function loginErrorMessage(err) {
   if (err.status === 401) {
     return 'Sai email hoặc mật khẩu (hoặc tài khoản đã bị khoá).'
   }
+  if (err.status === 429) {
+    const minutes = Math.max(1, Math.ceil((err.retryAfterSeconds || 900) / 60))
+    return `Đăng nhập sai quá nhiều lần. Thử lại sau ${minutes} phút.`
+  }
   if (err.status === 400) {
     return 'Email hoặc mật khẩu không đúng định dạng.'
   }

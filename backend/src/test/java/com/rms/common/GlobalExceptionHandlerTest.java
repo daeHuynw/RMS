@@ -6,9 +6,11 @@ import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.rms.exception.ApiException;
 import com.rms.modules.auth.controller.AuthController;
 import com.rms.modules.auth.service.AuthService;
 import jakarta.validation.ConstraintViolationException;
@@ -157,6 +159,15 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.path").value("/probe/boom"));
     }
 
+    /** 429 kèm header Retry-After (số giây), để client biết bao lâu nữa mới thử lại. */
+    @Test
+    void tooManyRequestsCarriesRetryAfter() throws Exception {
+        mvc.perform(get("/probe/too-many"))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().string("Retry-After", "540"))
+                .andExpect(jsonPath("$.code").value("TOO_MANY_LOGIN_ATTEMPTS"));
+    }
+
     @RestController
     static class ProbeController {
 
@@ -190,6 +201,11 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/probe/db-down")
         String dbDown() {
             throw new QueryTimeoutException("timeout", new RuntimeException("select * from orders where ..."));
+        }
+
+        @GetMapping("/probe/too-many")
+        String tooMany() {
+            throw ApiException.tooManyRequests("TOO_MANY_LOGIN_ATTEMPTS", "Too many failed login attempts", 540);
         }
 
         @GetMapping("/probe/too-large")

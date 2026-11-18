@@ -42,16 +42,19 @@ public class AuthService {
     private final PasswordEncoder passwords;
     private final RefreshTokenRepository refreshTokens;
     private final SecurityProperties security;
+    private final LoginAttemptService loginAttempts;
     private final SecureRandom random = new SecureRandom();
 
     public AuthService(UserRepository users, RoleRepository roles, PasswordEncoder passwords, JwtService jwt,
-                       RefreshTokenRepository refreshTokens, SecurityProperties security) {
+                       RefreshTokenRepository refreshTokens, SecurityProperties security,
+                       LoginAttemptService loginAttempts) {
         this.users = users;
         this.roles = roles;
         this.passwords = passwords;
         this.jwt = jwt;
         this.refreshTokens = refreshTokens;
         this.security = security;
+        this.loginAttempts = loginAttempts;
     }
 
     @Transactional
@@ -85,10 +88,13 @@ public class AuthService {
     @Transactional
     public AuthResponse login(LoginRequest request) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
+        // Đếm lần thử TRƯỚC khi kiểm mật khẩu: đang khoá thì 429 luôn, kể cả mật khẩu đúng.
+        loginAttempts.acquire(email);
         User user = users.findByEmail(email).orElse(null);
         if (user == null || !user.isActive() || !passwords.matches(request.password(), user.getPasswordHash())) {
             throw ApiException.unauthorized("Invalid credentials");
         }
+        loginAttempts.succeeded(email);
         return issue(user);
     }
 

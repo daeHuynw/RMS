@@ -98,6 +98,9 @@ export async function api(path, options = {}) {
     error.code = data?.code
     error.path = data?.path
     error.errors = data?.errors || null
+    // 429: server cho biết số giây phải chờ (header Retry-After)
+    const retryAfter = Number(response.headers.get('Retry-After'))
+    error.retryAfterSeconds = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : null
     throw error
   }
   return data

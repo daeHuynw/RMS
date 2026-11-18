@@ -11,6 +11,7 @@ import com.rms.modules.auth.dto.ChangePasswordRequest;
 import com.rms.modules.auth.entity.RefreshToken;
 import com.rms.modules.auth.repository.RefreshTokenRepository;
 import com.rms.modules.auth.service.AuthService;
+import com.rms.modules.auth.service.LoginAttemptService;
 import com.rms.modules.role.repository.RoleRepository;
 import com.rms.modules.user.entity.User;
 import com.rms.modules.user.repository.UserRepository;
@@ -55,7 +56,8 @@ class AuthServiceChangePasswordTest {
                 passwords,
                 mock(JwtService.class),
                 refreshTokens,
-                new SecurityProperties("test-only-secret-test-only-secret-test", 30, 30));
+                new SecurityProperties("test-only-secret-test-only-secret-test", 30, 30),
+                mock(LoginAttemptService.class));
 
         user = new User("An", "an@example.com", "old-hash", null);
         ReflectionTestUtils.setField(user, "id", USER_ID);
