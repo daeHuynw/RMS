@@ -8,16 +8,23 @@
     <link rel="stylesheet" href="/src/styles/home.css" />
   </head>
   <body>
-    <main class="page home-page">
-      <section class="card home-shell">
-        <header class="home-hero">
-          <p class="home-eyebrow">Restaurant Management System</p>
-          <h1 id="home-title">Xin chào</h1>
-          <p id="home-sub" class="muted">Chọn lối vào theo nhu cầu của bạn</p>
+    <main class="home">
+      <section class="home-hero">
+        <p class="home-eyebrow rise">Restaurant Management System</p>
+        <h1 id="home-title" class="home-title">Chào mừng đến RMS</h1>
+        <p id="home-sub" class="home-sub muted rise">Xem thực đơn · đăng nhập để đặt bàn rồi gọi món sau check-in</p>
+        <div id="home-cta" class="home-cta rise"></div>
+        <p class="home-scrollcue" aria-hidden="true">↓</p>
+      </section>
+      <section class="home-rooms">
+        <header class="home-rooms-head rise">
+          <p class="home-eyebrow">Lối vào</p>
+          <h2 class="home-rooms-title">Chọn không gian của bạn</h2>
         </header>
         <div id="home-grid" class="home-grid"></div>
       </section>
     </main>
+    <button type="button" class="to-top" aria-label="Lên đầu trang">↑</button>
     <script type="module" src="/src/pages/home.js"></script>
   </body>
 </html>
