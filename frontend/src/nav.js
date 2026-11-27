@@ -2,10 +2,6 @@ import { SERVER_UNREACHABLE, fetchMe, hasAnyRole, logoutAndRedirect, showPageErr
 import { cartCount, clearCart, onCartChange } from './cart.js'
 import { escapeHtml } from './utils.js'
 
-/**
- * Nav items: roles=null → luôn hiện (kể cả khách).
- * roles=[...] → hiện nếu user có ít nhất một role.
- */
 const LINKS = [
   { href: '/home.html', label: 'Trang chủ', roles: null },
   { href: '/menu.html', label: 'Thực đơn', roles: null },
@@ -54,15 +50,14 @@ function visibleLinks(me) {
   })
 }
 
-// Giỏ chỉ có ý nghĩa với người đặt bàn được (cùng nhóm vai với link "Đặt bàn").
 export const CART_ROLES = ['CUSTOMER', 'ADMIN']
 
 function render(me, failed) {
   const path = window.location.pathname
   const links = visibleLinks(me)
-    .map((link) => {
+    .map((link, i) => {
       const active = isActive(link.href, path) ? ' is-active' : ''
-      return `<a class="app-nav-link${active}" href="${link.href}">${link.label}</a>`
+      return `<a class="app-nav-link${active}" style="--n:${i}" href="${link.href}">${link.label}</a>`
     })
     .join('')
 
@@ -78,7 +73,6 @@ function render(me, failed) {
        ${cartBit}
        ${logoutBtn}`
   } else if (failed) {
-    // Còn token nhưng không hỏi được server: không giả làm khách, vẫn cho đăng xuất.
     authBit = `<span class="app-nav-user">Mất kết nối</span>${logoutBtn}`
   } else {
     authBit = `<a class="app-nav-link" href="/">Đăng nhập</a>
@@ -88,16 +82,17 @@ function render(me, failed) {
   return `
     <div class="app-nav-inner">
       <a class="app-nav-brand" href="/home.html">RMS</a>
-      <div class="app-nav-links">${links}</div>
-      <div class="app-nav-auth">${authBit}</div>
+      <button type="button" class="app-nav-toggle" aria-expanded="false" aria-controls="app-nav-panel" aria-label="Mở menu điều hướng">
+        <span class="app-nav-toggle-box" aria-hidden="true"><span></span><span></span></span>
+      </button>
+      <div class="app-nav-panel" id="app-nav-panel">
+        <div class="app-nav-links">${links}</div>
+        <div class="app-nav-auth">${authBit}</div>
+      </div>
     </div>
   `
 }
 
-/**
- * Gắn thanh nav theo vai vào #app-nav (tạo nếu thiếu).
- * @returns {Promise<object|null>} me
- */
 export async function mountAppNav() {
   let el = document.querySelector('#app-nav')
   if (!el) {
@@ -137,10 +132,41 @@ export async function mountAppNav() {
     })
   }
 
-  // Ẩn thanh nav cứng trong HTML cũ (admin/staff/kitchen)
   document.querySelectorAll('.admin-nav').forEach((node) => {
     node.hidden = true
   })
+
+  const toggle = el.querySelector('.app-nav-toggle')
+  const panel = el.querySelector('#app-nav-panel')
+  const setOpen = (open) => {
+    el.classList.toggle('is-open', open)
+    toggle.setAttribute('aria-expanded', String(open))
+    toggle.setAttribute('aria-label', open ? 'Đóng menu điều hướng' : 'Mở menu điều hướng')
+    document.documentElement.classList.toggle('nav-locked', open)
+    if (open) {
+      const first = panel.querySelector('a, button')
+      if (first) first.focus()
+    }
+  }
+  toggle.addEventListener('click', () => setOpen(!el.classList.contains('is-open')))
+  panel.addEventListener('click', (e) => {
+    if (e.target.closest('a')) setOpen(false)
+  })
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && el.classList.contains('is-open')) {
+      setOpen(false)
+      toggle.focus()
+    }
+  })
+  addEventListener('resize', () => {
+    if (innerWidth >= 768 && el.classList.contains('is-open')) setOpen(false)
+  })
+  document.addEventListener('click', (e) => {
+    if (el.classList.contains('is-open') && !el.contains(e.target)) setOpen(false)
+  })
+  const onScroll = () => el.classList.toggle('is-scrolled', scrollY > 8)
+  addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
 
   return me
 }

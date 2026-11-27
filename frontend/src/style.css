@@ -263,3 +263,79 @@ button:disabled {
   color: var(--feedback-error);
   font-size: var(--font-size-sm);
 }
+
+.app-nav-toggle { display: none; }
+.app-nav-panel { display: contents; }
+.app-nav.is-scrolled { box-shadow: 0 6px 24px rgb(34 34 34 / 0.06); }
+html.nav-locked { overflow: hidden; }
+@keyframes nav-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: none; }
+}
+@media (max-width: 767px) {
+  .app-nav-inner { flex-wrap: nowrap; }
+  .app-nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: 0 0 0 auto;
+    padding: 0;
+    background: transparent;
+    border: var(--border-width) solid var(--line);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .app-nav-toggle:hover {
+    background: transparent;
+    border-color: var(--wine);
+    color: var(--wine);
+  }
+  .app-nav-toggle-box { position: relative; display: block; width: 18px; height: 12px; }
+  .app-nav-toggle-box span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: currentColor;
+    transition: transform var(--t-base) var(--ease-inout), top var(--t-base) var(--ease-inout);
+  }
+  .app-nav-toggle-box span:first-child { top: 0; }
+  .app-nav-toggle-box span:last-child { top: 10px; }
+  .app-nav.is-open .app-nav-toggle-box span:first-child { top: 5px; transform: rotate(45deg); }
+  .app-nav.is-open .app-nav-toggle-box span:last-child { top: 5px; transform: rotate(-45deg); }
+  .app-nav-panel {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-5) var(--container-gutter) var(--space-6);
+    background: var(--paper);
+    border-bottom: var(--border-width) solid var(--line);
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    scrollbar-color: var(--sand-2) var(--paper);
+  }
+  .app-nav.is-open .app-nav-panel { display: flex; }
+  .app-nav-links { flex-direction: column; align-items: stretch; gap: 0; }
+  .app-nav-link {
+    padding: 12px 4px;
+    border-bottom: var(--border-width) solid var(--line);
+    font-size: var(--font-size-sm);
+  }
+  .app-nav.is-open .app-nav-link {
+    animation: nav-in .35s var(--ease-out) both;
+    animation-delay: calc(var(--n, 0) * 40ms);
+  }
+  .app-nav-auth { margin-left: 0; flex-direction: column; align-items: stretch; gap: var(--space-3); }
+  .app-nav-cart, .app-nav-logout { width: 100%; text-align: center; padding: 12px; }
+  .app-nav-user { text-align: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-nav.is-open .app-nav-link { animation: none; }
+  .app-nav-toggle-box span { transition: none; }
+}
