@@ -1,0 +1,132 @@
+:root {
+  --paper: #ffffff;
+  --ink: #414142;
+  --ink-2: #222222;
+  --muted: #767676;
+  --line: #eeeeee;
+  --wine: #5d090f;
+  --wine-2: #7b1b1d;
+  --sand: #d6c3a3;
+  --sand-2: #c1aa89;
+  --ok: #6b7c3d;
+
+  --surface: var(--paper);
+  --scrim: rgb(34 34 34 / 0.50);
+
+  --font-display: "Libre Baskerville", Baskerville, Georgia, serif;
+  --font-body: "Inter", "Helvetica Neue", Arial, sans-serif;
+
+  --font-weight-regular: 400;
+  --font-weight-bold: 700;
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: clamp(0.9375rem, 0.9rem + 0.2vw, 1rem);
+  --font-size-md: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  --font-size-lg: clamp(1.25rem, 1.1rem + 0.75vw, 1.75rem);
+  --font-size-xl: clamp(1.5rem, 1.2rem + 1.5vw, 2.5rem);
+  --font-size-2xl: clamp(2rem, 1.5rem + 2.5vw, 3.5rem);
+  --font-size-display: clamp(2.5rem, 1.8rem + 3.5vw, 5rem);
+
+  --line-height-tight: 1.1;
+  --line-height-base: 1.5;
+  --line-height-relaxed: 1.7;
+  --letter-spacing-wide: 0.12em;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --space-10: 8rem;
+  --space-11: 10rem;
+  --space-12: 12rem;
+
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+
+  --container-max-width: 1200px;
+  --container-gutter: 24px;
+
+  --border-width: 1px;
+  --border-radius: 0;
+  --shadow: none;
+  --focus-ring: 2px solid var(--wine);
+
+  --z-index-base: 1;
+  --z-index-sticky: 100;
+  --z-index-dropdown: 200;
+  --z-index-modal: 300;
+  --z-index-toast: 400;
+
+  --table-available: var(--ok);
+  --table-reserved: var(--sand);
+  --table-occupied: var(--wine);
+  --table-offline: var(--muted);
+
+  --reservation-pending: var(--sand);
+  --reservation-confirmed: var(--wine);
+  --reservation-checked-in: var(--ok);
+  --reservation-completed: var(--muted);
+  --reservation-cancelled: var(--ink);
+  --reservation-no-show: var(--ink);
+
+  --kitchen-pending: var(--wine);
+  --kitchen-preparing: var(--sand);
+  --kitchen-ready: var(--ok);
+  --kitchen-served: var(--muted);
+  --kitchen-cancelled: var(--muted);
+
+  --session-open: var(--ok);
+  --session-closed: var(--muted);
+
+  --order-active: var(--wine);
+  --order-paid: var(--ok);
+  --order-void: var(--muted);
+
+  --payment-cash: var(--ok);
+  --payment-transfer: var(--wine);
+
+  --feedback-error: var(--wine-2);
+  --feedback-success: var(--ok);
+  --feedback-warning: var(--sand-2);
+
+  --ease-inout: cubic-bezier(.75, 0, .125, 1);
+  --ease-out: cubic-bezier(.215, .61, .355, 1);
+  --t-fast: .25s;
+  --t-base: .5s;
+  --t-slow: 1s;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --container-gutter: 16px;
+  }
+}
+
+[data-surface="kitchen"] {
+  --paper: #161210;
+  --surface: #221b15;
+  --ink: #f6ede1;
+  --ink-2: #fbf7f0;
+  --muted: #b3a493;
+  --line: #3a2f24;
+  --wine: #d06a62;
+  --wine-2: #e08a80;
+  --ok: #a8c06a;
+  --scrim: rgb(0 0 0 / 0.60);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-fast: 0s;
+    --t-base: 0s;
+    --t-slow: 0s;
+  }
+}
